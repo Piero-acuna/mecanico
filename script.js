@@ -1,5 +1,5 @@
 /* =========================================================
-   TorqueFlow — Dashboard
+   TorqueFlow — Gestión integral de taller
    JavaScript Vanilla orientado a datos JSON y futura API/BD
    ========================================================= */
 
@@ -450,6 +450,122 @@ const appData = {
   ]
 };
 
+
+
+const serviceCatalogData = [
+  { id: "SRV-001", category: "mantenimiento", name: "Mantenimiento preventivo", description: "Cambio de aceite, filtro y revisión de puntos básicos.", price: 180, hours: 2, icon: "wrench" },
+  { id: "SRV-002", category: "motor", name: "Diagnóstico electrónico", description: "Escaneo, lectura de códigos y diagnóstico inicial.", price: 120, hours: 1, icon: "gauge" },
+  { id: "SRV-003", category: "frenos", name: "Servicio de frenos", description: "Inspección, limpieza y regulación del sistema.", price: 160, hours: 2, icon: "shield" },
+  { id: "SRV-004", category: "frenos", name: "Cambio de pastillas", description: "Desmontaje, instalación y asentamiento de pastillas.", price: 130, hours: 1.5, icon: "shield" },
+  { id: "SRV-005", category: "suspension", name: "Diagnóstico de suspensión", description: "Revisión de amortiguadores, rótulas, terminales y bujes.", price: 100, hours: 1, icon: "car" },
+  { id: "SRV-006", category: "motor", name: "Afinamiento de motor", description: "Revisión de encendido, admisión y parámetros de operación.", price: 240, hours: 3, icon: "gauge" },
+  { id: "SRV-007", category: "transmision", name: "Cambio de kit de embrague", description: "Desmontaje de caja, instalación y calibración.", price: 650, hours: 8, icon: "wrench" },
+  { id: "SRV-008", category: "electrico", name: "Diagnóstico eléctrico", description: "Pruebas de carga, continuidad, batería y alternador.", price: 140, hours: 2, icon: "trending" },
+  { id: "SRV-009", category: "refrigeracion", name: "Servicio de refrigeración", description: "Limpieza, purga y revisión de fugas del sistema.", price: 190, hours: 2.5, icon: "gauge" },
+  { id: "SRV-010", category: "motor", name: "Prueba de compresión", description: "Medición de cilindros y evaluación del sellado interno.", price: 130, hours: 1.5, icon: "trending" },
+  { id: "SRV-011", category: "direccion", name: "Alineamiento y dirección", description: "Inspección de dirección y preparación para alineamiento.", price: 110, hours: 1.5, icon: "car" },
+
+  { id: "SRV-013", category: "direccion", name: "Diagnóstico de dirección", description: "Revisión de terminales, cremallera, bomba, fugas y holguras.", price: 120, hours: 1.5, icon: "car" },
+  { id: "SRV-014", category: "transmision", name: "Diagnóstico de transmisión", description: "Prueba funcional, inspección de fugas, ruidos y accionamiento.", price: 180, hours: 2.5, icon: "wrench" },
+  { id: "SRV-015", category: "refrigeracion", name: "Limpieza de sistema de refrigeración", description: "Drenaje, lavado, purga, refrigerante y control de temperatura.", price: 220, hours: 3, icon: "gauge" },
+  { id: "SRV-016", category: "climatizacion", name: "Diagnóstico de aire acondicionado", description: "Prueba de presión, temperatura, fugas y control eléctrico.", price: 150, hours: 2, icon: "gauge" },
+  { id: "SRV-017", category: "electrico", name: "Prueba de batería y alternador", description: "Medición de arranque, carga, consumo y caída de tensión.", price: 80, hours: 1, icon: "trending" },
+  { id: "SRV-018", category: "suspension", name: "Cambio de amortiguadores", description: "Desmontaje, instalación, torque y verificación de altura.", price: 320, hours: 4, icon: "car" },
+  { id: "SRV-019", category: "motor", name: "Reparación de culata", description: "Desmontaje, armado, calibración y pruebas posteriores.", price: 950, hours: 14, icon: "wrench" },
+  { id: "SRV-020", category: "mantenimiento", name: "Mantenimiento integral", description: "Servicio completo con inspección multipunto y reporte técnico.", price: 360, hours: 4.5, icon: "clipboard" },
+  { id: "SRV-012", category: "mantenimiento", name: "Cambio de aceite de caja", description: "Drenaje, llenado y verificación de fugas.", price: 120, hours: 1.5, icon: "wrench" }
+];
+
+const serviceCategories = [
+  { id: "todos", label: "Todos" },
+  { id: "mantenimiento", label: "Mantenimiento" },
+  { id: "motor", label: "Motor" },
+  { id: "frenos", label: "Frenos" },
+  { id: "suspension", label: "Suspensión" },
+  { id: "direccion", label: "Dirección" },
+  { id: "transmision", label: "Transmisión" },
+  { id: "electrico", label: "Eléctrico" },
+  { id: "refrigeracion", label: "Refrigeración" },
+  { id: "climatizacion", label: "Climatización" }
+];
+
+const existingClients = [
+  { name: "Carlos Mendoza", document: "45872103", phone: "987 221 410", email: "carlos.mendoza@email.com" },
+  { name: "María Torres", document: "47419328", phone: "965 348 201", email: "maria.torres@email.com" },
+  { name: "Andrea Salazar", document: "70192844", phone: "944 522 716", email: "andrea.salazar@email.com" },
+  { name: "Pablo Ríos", document: "42775102", phone: "975 631 089", email: "" }
+];
+
+const newOrderState = {
+  selectedServices: new Map(),
+  photos: [],
+  category: "todos",
+  lastGeneratedOrder: null,
+  draftTimer: null
+};
+
+const workOrdersState = {
+  viewMode: "kanban",
+  search: "",
+  filters: { status: "all", mechanic: "all", priority: "all", cost: "all" },
+  sort: "priority",
+  selected: new Set(),
+  draggedOrderId: null,
+  editorOrderId: null,
+  editorDraft: null,
+  editorTab: "summary",
+  timerInterval: null,
+  restoredFromStorage: false
+};
+
+const workOrderDetailsSeed = {
+  "OT-1048": {
+    diagnosis: "Pérdida de compresión y recalentamiento. Se detectó deformación de culata y fuga en la junta.",
+    notes: "Confirmar prueba hidráulica antes del montaje. Cliente solicita fotografías del proceso.",
+    approvalStatus: "approved", paymentStatus: "partial", laborCost: 420, otherCost: 0, discount: 0, workSeconds: 12600,
+    parts: [
+      { id: "P-1048-1", name: "Juego de empaquetaduras", qty: 1, unitCost: 360, supplier: "MotorParts" },
+      { id: "P-1048-2", name: "Pernos de culata", qty: 1, unitCost: 220, supplier: "Repuestos Norte" }
+    ],
+    externalWorks: [
+      { id: "EXT-1048-1", type: "Rectificadora", vendor: "Rectificaciones El Norte", description: "Cepillado, prueba hidráulica y asentado de válvulas", outAt: "2026-07-31T09:20:00-05:00", returnAt: null, cost: 320, status: "in_progress" }
+    ]
+  },
+  "OT-1047": {
+    diagnosis: "Embrague patina bajo carga y el pedal presenta recorrido irregular.", notes: "Esperando llegada del kit confirmado por el proveedor.",
+    approvalStatus: "approved", paymentStatus: "pending", laborCost: 200, otherCost: 0, discount: 0, workSeconds: 5400,
+    parts: [{ id: "P-1047-1", name: "Kit de embrague", qty: 1, unitCost: 510, supplier: "Autopartes San José" }], externalWorks: []
+  },
+  "OT-1046": {
+    diagnosis: "Ruido delantero al pasar irregularidades. Se requiere desmontaje para validar rótulas y bujes.", notes: "Cotización aún no aprobada.",
+    approvalStatus: "pending", paymentStatus: "pending", laborCost: 180, otherCost: 0, discount: 0, workSeconds: 2700, parts: [], externalWorks: []
+  },
+  "OT-1045": {
+    diagnosis: "Mantenimiento por kilometraje. Filtros saturados y aceite próximo al límite de servicio.", notes: "Vehículo listo para entrega.",
+    approvalStatus: "approved", paymentStatus: "paid", laborCost: 140, otherCost: 0, discount: 0, workSeconds: 6300,
+    parts: [
+      { id: "P-1045-1", name: "Aceite 5W-30", qty: 4, unitCost: 28, supplier: "Lubricentro Central" },
+      { id: "P-1045-2", name: "Filtro de aceite", qty: 1, unitCost: 32, supplier: "Lubricentro Central" },
+      { id: "P-1045-3", name: "Filtro de aire", qty: 1, unitCost: 24, supplier: "Lubricentro Central" }
+    ], externalWorks: []
+  },
+  "OT-1044": {
+    diagnosis: "Falla eléctrica intermitente en luces y elevavidrios. Se inspeccionará alimentación principal y tierras.", notes: "Revisar instalación de accesorios no originales.",
+    approvalStatus: "approved", paymentStatus: "pending", laborCost: 190, otherCost: 0, discount: 0, workSeconds: 1800, parts: [], externalWorks: []
+  },
+  "OT-1043": {
+    diagnosis: "Vibración al frenar y espesor de pastillas por debajo del mínimo.", notes: "Proveedor confirmó discos para esta tarde.",
+    approvalStatus: "approved", paymentStatus: "partial", laborCost: 150, otherCost: 0, discount: 0, workSeconds: 3900,
+    parts: [{ id: "P-1043-1", name: "Juego de pastillas delanteras", qty: 1, unitCost: 160, supplier: "Frenos Chiclayo" }, { id: "P-1043-2", name: "Discos delanteros", qty: 2, unitCost: 75, supplier: "Frenos Chiclayo" }], externalWorks: []
+  },
+  "OT-1042": {
+    diagnosis: "Desgaste irregular de pastillas y líquido de frenos contaminado.", notes: "Trabajo finalizado y probado en ruta.",
+    approvalStatus: "approved", paymentStatus: "paid", laborCost: 190, otherCost: 0, discount: 0, workSeconds: 7200,
+    parts: [{ id: "P-1042-1", name: "Pastillas delanteras", qty: 1, unitCost: 260, supplier: "EuroParts" }, { id: "P-1042-2", name: "Líquido DOT 4", qty: 2, unitCost: 70, supplier: "EuroParts" }], externalWorks: []
+  }
+};
+
+
 const UI = {
   metricsGrid: document.querySelector("#metricsGrid"),
   priorityOrders: document.querySelector("#priorityOrders"),
@@ -471,7 +587,24 @@ const UI = {
   placeholderView: document.querySelector("#placeholderView"),
   placeholderTitle: document.querySelector("#placeholderTitle"),
   placeholderText: document.querySelector("#placeholderText"),
-  toastRegion: document.querySelector("#toastRegion")
+  toastRegion: document.querySelector("#toastRegion"),
+  newOrderView: document.querySelector("#newOrderView"),
+  newOrderForm: document.querySelector("#newOrderForm"),
+  serviceCatalog: document.querySelector("#serviceCatalog"),
+  serviceCategories: document.querySelector("#serviceCategories"),
+  serviceSearch: document.querySelector("#serviceSearch"),
+  selectedServices: document.querySelector("#selectedServices"),
+  quoteEmpty: document.querySelector("#quoteEmpty"),
+  jsonPreviewDialog: document.querySelector("#jsonPreviewDialog"),
+  orderSuccessDialog: document.querySelector("#orderSuccessDialog"),
+  workOrdersView: document.querySelector("#workOrdersView"),
+  workOrdersMetrics: document.querySelector("#workOrdersMetrics"),
+  ordersKanban: document.querySelector("#ordersKanban"),
+  ordersTableView: document.querySelector("#ordersTableView"),
+  ordersTableBody: document.querySelector("#ordersTableBody"),
+  ordersEmptyState: document.querySelector("#ordersEmptyState"),
+  orderEditorDialog: document.querySelector("#orderEditorDialog"),
+  orderEditorForm: document.querySelector("#orderEditorForm")
 };
 
 const statusConfig = {
@@ -520,6 +653,21 @@ const escapeHTML = (value = "") => String(value)
   .replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
+
+function safeStorageGet(key) {
+  try { return window.localStorage.getItem(key); }
+  catch (error) { console.warn(`Almacenamiento local no disponible para ${key}.`, error); return null; }
+}
+
+function safeStorageSet(key, value) {
+  try { window.localStorage.setItem(key, value); return true; }
+  catch (error) { console.warn(`No se pudo guardar ${key}.`, error); return false; }
+}
+
+function safeStorageRemove(key) {
+  try { window.localStorage.removeItem(key); return true; }
+  catch (error) { console.warn(`No se pudo eliminar ${key}.`, error); return false; }
+}
 
 function calculateDashboardMetrics() {
   const activeOrders = appData.orders.filter((order) => order.status !== "listo").length;
@@ -860,11 +1008,14 @@ function closeSidebar() {
 }
 
 function setActiveView(viewName) {
-  const validView = ["dashboard", "historial", "repuestos"].includes(viewName) ? viewName : viewName;
+  const validViews = ["dashboard", "nueva-orden", "ordenes", "historial", "repuestos", "clientes", "configuracion"];
+  const validView = validViews.includes(viewName) ? viewName : "dashboard";
   const isDashboard = validView === "dashboard";
+  const isNewOrder = validView === "nueva-orden";
+  const isWorkOrders = validView === "ordenes";
   const isHistory = validView === "historial";
   const isParts = validView === "repuestos";
-  const isPlaceholder = !isDashboard && !isHistory && !isParts;
+  const isPlaceholder = ["clientes", "configuracion"].includes(validView);
 
   document.querySelectorAll(".nav-item[data-view]").forEach((link) => {
     const isActive = link.dataset.view === validView;
@@ -874,19 +1025,23 @@ function setActiveView(viewName) {
   });
 
   UI.dashboardView.hidden = !isDashboard;
+  UI.newOrderView.hidden = !isNewOrder;
+  UI.workOrdersView.hidden = !isWorkOrders;
   UI.historyView.hidden = !isHistory;
   UI.partsView.hidden = !isParts;
   UI.placeholderView.hidden = !isPlaceholder;
 
-  if (isHistory) {
+  if (isNewOrder) {
+    updateNextOrderNumber();
+    updateOrderSummary();
+  } else if (isWorkOrders) {
+    renderWorkOrdersModule();
+  } else if (isHistory) {
     renderHistoryModule();
   } else if (isParts) {
     renderPartsModule();
   } else if (isPlaceholder) {
-    const copy = viewCopy[validView] || {
-      title: "Módulo preparado",
-      text: "Esta vista será conectada en la siguiente etapa."
-    };
+    const copy = viewCopy[validView] || { title: "Módulo preparado", text: "Esta vista será conectada en una siguiente etapa." };
     UI.placeholderTitle.textContent = copy.title;
     UI.placeholderText.textContent = copy.text;
   } else {
@@ -897,22 +1052,25 @@ function setActiveView(viewName) {
   closeSidebar();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
 function handleGlobalSearch() {
   const query = UI.globalSearch.value.trim().toLowerCase();
-
   if (!query) {
     UI.searchResults.hidden = true;
     UI.searchResults.innerHTML = "";
     return;
   }
 
-  const activeMatches = appData.orders.filter((order) => [order.id, order.plate, order.vehicle, order.client, order.phone, order.mechanic]
-    .join(" ").toLowerCase().includes(query)).map((order) => ({ type: "order", item: order }));
-  const historyMatches = appData.history.filter((order) => [order.id, order.plate, order.vehicle, order.client, order.phone, order.service]
-    .join(" ").toLowerCase().includes(query)).map((order) => ({ type: "history", item: order }));
-  const partMatches = appData.parts.filter((part) => [part.id, part.sku, part.barcode, part.name, part.brand, part.category]
-    .join(" ").toLowerCase().includes(query)).map((part) => ({ type: "part", item: part }));
-  const matches = [...activeMatches, ...historyMatches, ...partMatches].slice(0, 8);
+  const activeMatches = appData.orders
+    .filter((order) => [order.id, order.plate, order.vehicle, order.client, order.phone, order.mechanic, order.service].join(" ").toLowerCase().includes(query))
+    .map((item) => ({ type: "order", item }));
+  const historyMatches = appData.history
+    .filter((order) => [order.id, order.plate, order.vehicle, order.client, order.phone, order.service].join(" ").toLowerCase().includes(query))
+    .map((item) => ({ type: "history", item }));
+  const partMatches = appData.parts
+    .filter((part) => [part.id, part.sku, part.barcode, part.name, part.brand, part.category, part.supplier].join(" ").toLowerCase().includes(query))
+    .map((item) => ({ type: "part", item }));
+  const matches = [...activeMatches, ...historyMatches, ...partMatches].slice(0, 10);
 
   UI.searchResults.hidden = false;
   UI.searchResults.innerHTML = matches.length ? matches.map(({ type, item }) => {
@@ -924,9 +1082,10 @@ function handleGlobalSearch() {
       return `<button class="search-result" type="button" role="option" data-search-history="${escapeHTML(item.id)}"><span class="search-result__icon"><svg><use href="#icon-history"></use></svg></span><span class="search-result__content"><strong>${highlightMatch(`${item.plate} · ${item.vehicle}`, query)}</strong><small>${highlightMatch(`${item.id} · ${item.service}`, query)}</small></span><span class="history-status ${status.className}">${status.label}</span></button>`;
     }
     const stock = stockStatusConfig[getStockStatus(item)];
-    return `<button class="search-result" type="button" role="option" data-search-part="${escapeHTML(item.id)}"><span class="search-result__icon"><svg><use href="#icon-box"></use></svg></span><span class="search-result__content"><strong>${highlightMatch(item.name, query)}</strong><small>${highlightMatch(`${item.sku} · ${item.brand}`, query)}</small></span><span class="stock-status ${stock.className}">${item.stock} ${escapeHTML(item.unit)}</span></button>`;
-  }).join("") : '<div class="search-empty">No se encontraron vehículos, clientes, órdenes o repuestos.</div>';
+    return `<button class="search-result" type="button" role="option" data-search-part="${escapeHTML(item.id)}"><span class="search-result__icon"><svg><use href="#icon-box"></use></svg></span><span class="search-result__content"><strong>${highlightMatch(item.name, query)}</strong><small>${highlightMatch(`${item.sku} · ${item.category}`, query)}</small></span><span class="stock-status ${stock.className}">${item.stock} ${escapeHTML(item.unit)}</span></button>`;
+  }).join("") : '<div class="search-empty">No se encontraron órdenes, clientes, vehículos o repuestos.</div>';
 }
+
 function highlightMatch(text, query) {
   const safeText = escapeHTML(text);
   const safeQuery = escapeHTML(query).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -971,14 +1130,1093 @@ function dismissAlert(alertId) {
   showToast("Alerta revisada", "Se ocultó del panel actual.", "check");
 }
 
+
+function currencyWithDecimals(value) {
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: appData.workshop.currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(value) || 0);
+}
+
+function getNextOrderNumber() {
+  const maxId = appData.orders.reduce((max, order) => {
+    const numeric = Number.parseInt(String(order.id).replace(/\D/g, ""), 10) || 0;
+    return Math.max(max, numeric);
+  }, 1048);
+  return `OT-${String(maxId + 1).padStart(4, "0")}`;
+}
+
+function updateNextOrderNumber() {
+  const element = document.querySelector("#nextOrderNumber");
+  if (element) element.textContent = getNextOrderNumber();
+}
+
+function setDefaultOrderDates() {
+  const entryInput = document.querySelector("#entryDateTime");
+  const promiseInput = document.querySelector("#promisedDateTime");
+  if (!entryInput || entryInput.value) return;
+  const now = new Date();
+  const promise = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const toLocalInput = (date) => {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+  entryInput.value = toLocalInput(now);
+  promiseInput.value = toLocalInput(promise);
+}
+
+function renderServiceCategories() {
+  if (!UI.serviceCategories) return;
+  UI.serviceCategories.innerHTML = serviceCategories.map((category) => `
+    <button class="${category.id === newOrderState.category ? "is-active" : ""}" type="button" data-service-category="${category.id}">${category.label}</button>
+  `).join("");
+}
+
+function renderServiceCatalog() {
+  if (!UI.serviceCatalog) return;
+  const query = (UI.serviceSearch?.value || "").trim().toLowerCase();
+  const filtered = serviceCatalogData.filter((service) => {
+    const inCategory = newOrderState.category === "todos" || service.category === newOrderState.category;
+    const haystack = `${service.id} ${service.name} ${service.description} ${service.category}`.toLowerCase();
+    return inCategory && haystack.includes(query);
+  });
+
+  renderServiceCategories();
+  document.querySelector("#catalogResultCount").textContent = filtered.length;
+  document.querySelector("#selectedServiceCount").textContent = newOrderState.selectedServices.size;
+
+  UI.serviceCatalog.innerHTML = filtered.length ? filtered.map((service) => {
+    const isSelected = newOrderState.selectedServices.has(service.id);
+    return `
+      <button class="service-card ${isSelected ? "is-selected" : ""}" type="button" data-service-id="${service.id}" aria-pressed="${isSelected}">
+        <span class="service-card__top">
+          <span class="service-card__icon"><svg><use href="#icon-${service.icon}"></use></svg></span>
+          <span class="service-card__check"><svg><use href="#icon-check"></use></svg></span>
+        </span>
+        <span><strong>${escapeHTML(service.name)}</strong><p>${escapeHTML(service.description)}</p></span>
+        <span class="service-card__footer"><span>${service.hours} h aprox.</span><strong>${currencyWithDecimals(service.price)}</strong></span>
+      </button>
+    `;
+  }).join("") : '<div class="catalog-empty">No encontramos servicios con ese filtro. Puedes agregar uno personalizado.</div>';
+}
+
+function toggleService(serviceId) {
+  const service = serviceCatalogData.find((item) => item.id === serviceId);
+  if (!service) return;
+  if (newOrderState.selectedServices.has(serviceId)) newOrderState.selectedServices.delete(serviceId);
+  else newOrderState.selectedServices.set(serviceId, { ...service });
+  renderServiceCatalog();
+  renderSelectedServices();
+  markDraftDirty();
+}
+
+function addCustomService() {
+  const nameInput = document.querySelector("#customServiceName");
+  const priceInput = document.querySelector("#customServicePrice");
+  const hoursInput = document.querySelector("#customServiceHours");
+  const name = nameInput.value.trim();
+  const price = Number(priceInput.value);
+  const hours = Number(hoursInput.value);
+  if (!name || price < 0 || !hours) {
+    showToast("Datos incompletos", "Ingresa descripción, precio y duración del servicio.", "alert");
+    return;
+  }
+  const id = `CUSTOM-${Date.now()}`;
+  newOrderState.selectedServices.set(id, { id, name, price, hours, category: "personalizado", description: "Servicio personalizado", icon: "wrench", custom: true });
+  nameInput.value = "";
+  priceInput.value = "";
+  hoursInput.value = "1";
+  document.querySelector("#customServiceForm").hidden = true;
+  renderSelectedServices();
+  renderServiceCatalog();
+  markDraftDirty();
+}
+
+function renderSelectedServices() {
+  if (!UI.selectedServices) return;
+  const services = [...newOrderState.selectedServices.values()];
+  UI.quoteEmpty.hidden = services.length > 0;
+  UI.selectedServices.innerHTML = services.map((service) => `
+    <div class="selected-service" data-selected-service="${service.id}">
+      <span class="selected-service__info"><strong>${escapeHTML(service.name)}</strong><small>${service.hours} h · ${escapeHTML(service.id)}</small></span>
+      <input class="selected-service__price" type="number" min="0" step="0.01" value="${Number(service.price).toFixed(2)}" data-service-price="${service.id}" aria-label="Precio de ${escapeHTML(service.name)}">
+      <button class="remove-selected-service" type="button" data-remove-service="${service.id}" aria-label="Quitar ${escapeHTML(service.name)}"><svg><use href="#icon-trash"></use></svg></button>
+    </div>
+  `).join("");
+  document.querySelector("#selectedServiceCount").textContent = services.length;
+  updateOrderSummary();
+}
+
+function getNumericValue(selector) {
+  return Math.max(0, Number(document.querySelector(selector)?.value) || 0);
+}
+
+function updateOrderSummary() {
+  const services = [...newOrderState.selectedServices.values()];
+  const servicesSubtotal = services.reduce((sum, service) => sum + Number(service.price || 0), 0);
+  const parts = getNumericValue("#partsEstimate");
+  const external = getNumericValue("#externalEstimate");
+  const discount = getNumericValue("#discountAmount");
+  const total = Math.max(0, servicesSubtotal + parts + external - discount);
+  const duration = services.reduce((sum, service) => sum + Number(service.hours || 0), 0);
+
+  document.querySelector("#servicesSubtotal").textContent = currencyWithDecimals(servicesSubtotal);
+  document.querySelector("#extrasSubtotal").textContent = currencyWithDecimals(parts + external);
+  document.querySelector("#discountTotal").textContent = `- ${currencyWithDecimals(discount)}`;
+  document.querySelector("#estimatedTotal").textContent = currencyWithDecimals(total);
+  document.querySelector("#estimatedDuration").textContent = `Duración estimada: ${duration.toFixed(1).replace(".0", "")} h`;
+
+  const plate = document.querySelector("#vehiclePlate")?.value.trim().toUpperCase();
+  const brand = document.querySelector("#vehicleBrand")?.value;
+  const model = document.querySelector("#vehicleModel")?.value.trim();
+  const summary = document.querySelector("#vehicleMiniSummary");
+  if (plate || brand || model) {
+    summary.querySelector("strong").textContent = [plate, brand, model].filter(Boolean).join(" · ");
+    summary.querySelector("small").textContent = document.querySelector("#clientName")?.value.trim() || "Cliente por completar";
+  } else {
+    summary.querySelector("strong").textContent = "Vehículo sin registrar";
+    summary.querySelector("small").textContent = "Completa la placa, marca y modelo.";
+  }
+
+  updateBudgetHealth(total);
+  updateSectionCompleteness();
+  return { servicesSubtotal, parts, external, discount, total, duration };
+}
+
+function updateBudgetHealth(total) {
+  const budget = getNumericValue("#authorizedBudget");
+  const container = document.querySelector("#budgetHealth");
+  if (!budget) {
+    container.hidden = true;
+    return;
+  }
+  container.hidden = false;
+  const percentage = Math.round((total / budget) * 100);
+  const capped = Math.min(100, percentage);
+  document.querySelector("#budgetHealthPercent").textContent = `${percentage}%`;
+  document.querySelector("#budgetHealthBar").style.setProperty("--progress", `${capped}%`);
+  container.classList.toggle("is-warning", percentage >= 85 && percentage <= 100);
+  container.classList.toggle("is-danger", percentage > 100);
+  document.querySelector("#budgetHealthMessage").textContent = percentage > 100
+    ? `La cotización excede el presupuesto en ${currencyWithDecimals(total - budget)}.`
+    : percentage >= 85
+      ? "La cotización está cerca del límite autorizado."
+      : `Quedan ${currencyWithDecimals(budget - total)} disponibles.`;
+}
+
+function updateSectionCompleteness() {
+  const customerFields = ["#clientName", "#clientPhone", "#vehiclePlate", "#vehicleBrand", "#vehicleModel"];
+  const customerDone = customerFields.filter((selector) => document.querySelector(selector)?.value.trim()).length;
+  const inspectionDone = document.querySelector("#entryDateTime")?.value ? 1 : 0;
+  const servicesDone = document.querySelector("#initialDiagnosis")?.value.trim() && newOrderState.selectedServices.size ? 2 : (document.querySelector("#initialDiagnosis")?.value.trim() || newOrderState.selectedServices.size ? 1 : 0);
+  const approvalDone = document.querySelector("#clientAuthorization")?.checked ? 1 : 0;
+  const values = { customer: Math.round(customerDone / customerFields.length * 100), inspection: inspectionDone * 100, services: servicesDone * 50, approval: approvalDone * 100 };
+
+  document.querySelectorAll("[data-completeness]").forEach((element) => {
+    const value = values[element.dataset.completeness] || 0;
+    element.textContent = `${value}%`;
+    element.classList.toggle("is-complete", value === 100);
+  });
+  const steps = document.querySelectorAll(".order-progress__step");
+  [values.customer, values.inspection, values.services, values.approval].forEach((value, index) => steps[index]?.classList.toggle("is-complete", value === 100));
+}
+
+function getCheckedValues(containerSelector) {
+  return [...document.querySelectorAll(`${containerSelector} input:checked`)].map((input) => input.value);
+}
+
+function buildOrderPayload() {
+  const totals = updateOrderSummary();
+  const formData = new FormData(UI.newOrderForm);
+  const promisedAt = formData.get("promisedDateTime") || null;
+  const selectedServices = [...newOrderState.selectedServices.values()].map((service) => ({
+    id: service.id,
+    name: service.name,
+    category: service.category,
+    estimatedHours: Number(service.hours),
+    quotedPrice: Number(service.price),
+    custom: Boolean(service.custom)
+  }));
+
+  return {
+    id: getNextOrderNumber(),
+    createdAt: new Date().toISOString(),
+    createdBy: { id: "USR-001", name: "Leonardo Acuña", role: "Administrador" },
+    status: "revision",
+    priority: formData.get("orderPriority"),
+    customer: {
+      name: formData.get("clientName")?.trim(),
+      document: formData.get("clientDocument")?.trim() || null,
+      phone: formData.get("clientPhone")?.trim(),
+      email: formData.get("clientEmail")?.trim() || null,
+      preferredChannel: formData.get("contactChannel")
+    },
+    vehicle: {
+      plate: formData.get("vehiclePlate")?.trim().toUpperCase(),
+      brand: formData.get("vehicleBrand"),
+      model: formData.get("vehicleModel")?.trim(),
+      year: Number(formData.get("vehicleYear")) || null,
+      color: formData.get("vehicleColor")?.trim() || null,
+      mileageKm: Number(formData.get("vehicleMileage")) || null,
+      fuelType: formData.get("fuelType"),
+      vin: formData.get("vehicleVin")?.trim().toUpperCase() || null,
+      fuelLevelPercent: Number(formData.get("fuelLevel"))
+    },
+    reception: {
+      enteredAt: formData.get("entryDateTime"),
+      promisedAt,
+      mechanic: formData.get("assignedMechanic"),
+      visibleDamage: getCheckedValues("#damageChecks"),
+      receivedAccessories: getCheckedValues("#accessoryChecks"),
+      notes: formData.get("receptionNotes")?.trim() || null,
+      photos: newOrderState.photos.map((photo) => ({ name: photo.name, type: photo.type, size: photo.size }))
+    },
+    diagnosis: {
+      customerReport: formData.get("initialDiagnosis")?.trim(),
+      internalNotes: formData.get("internalNotes")?.trim() || null
+    },
+    quotation: {
+      services: selectedServices,
+      servicesSubtotal: totals.servicesSubtotal,
+      partsEstimate: totals.parts,
+      externalWorkEstimate: totals.external,
+      discount: totals.discount,
+      estimatedTotal: totals.total,
+      estimatedHours: totals.duration,
+      authorizedBudget: getNumericValue("#authorizedBudget"),
+      advancePayment: getNumericValue("#advancePayment"),
+      paymentMethod: formData.get("paymentMethod")
+    },
+    approvals: {
+      viaWhatsapp: document.querySelector("#approvalWhatsapp").checked,
+      notifyProgress: document.querySelector("#notifyProgress").checked,
+      allowAdditionalWork: document.querySelector("#allowExtraWork").checked,
+      entryTermsAccepted: document.querySelector("#clientAuthorization").checked
+    }
+  };
+}
+
+function validateNewOrder() {
+  const requiredSelectors = ["#clientName", "#clientPhone", "#vehiclePlate", "#vehicleBrand", "#vehicleModel", "#entryDateTime", "#initialDiagnosis"];
+  let firstInvalid = null;
+  requiredSelectors.forEach((selector) => {
+    const input = document.querySelector(selector);
+    const field = input.closest(".field");
+    const invalid = !String(input.value || "").trim();
+    field?.classList.toggle("is-invalid", invalid);
+    if (invalid && !firstInvalid) firstInvalid = input;
+  });
+
+  const phone = document.querySelector("#clientPhone");
+  const digits = phone.value.replace(/\D/g, "");
+  if (digits.length < 9) {
+    phone.closest(".field")?.classList.add("is-invalid");
+    firstInvalid ||= phone;
+  }
+
+  if (!newOrderState.selectedServices.size) {
+    showToast("Falta seleccionar servicios", "Agrega al menos un trabajo a la cotización.", "alert");
+    firstInvalid ||= UI.serviceSearch;
+  }
+
+  const terms = document.querySelector("#clientAuthorization");
+  terms.closest(".terms-check")?.classList.toggle("is-invalid", !terms.checked);
+  if (!terms.checked) firstInvalid ||= terms;
+
+  if (firstInvalid) {
+    firstInvalid.focus({ preventScroll: true });
+    firstInvalid.closest(".form-card, .terms-check")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    showToast("Revisa la información", "Completa los campos obligatorios marcados.", "alert");
+    return false;
+  }
+  return true;
+}
+
+function previewOrderJson() {
+  const payload = buildOrderPayload();
+  document.querySelector("#jsonPreviewContent").textContent = JSON.stringify(payload, null, 2);
+  UI.jsonPreviewDialog.showModal();
+}
+
+function generateOrder() {
+  if (!validateNewOrder()) return;
+  const payload = buildOrderPayload();
+  newOrderState.lastGeneratedOrder = payload;
+  appData.orders.unshift({
+    id: payload.id,
+    plate: payload.vehicle.plate,
+    vehicle: `${payload.vehicle.brand} ${payload.vehicle.model}${payload.vehicle.year ? ` ${payload.vehicle.year}` : ""}`,
+    client: payload.customer.name,
+    phone: payload.customer.phone,
+    status: "revision",
+    mechanic: payload.reception.mechanic,
+    service: payload.quotation.services.map((service) => service.name).join(", "),
+    enteredAt: payload.reception.enteredAt,
+    promisedAt: payload.reception.promisedAt || payload.reception.enteredAt,
+    budget: payload.quotation.authorizedBudget || payload.quotation.estimatedTotal,
+    currentCost: 0,
+    priority: payload.priority === "urgente" ? 1 : payload.priority === "alta" ? 2 : 3,
+    diagnosis: payload.diagnosis.customerReport,
+    notes: payload.diagnosis.internalNotes || "",
+    approvalStatus: payload.approvals.entryTermsAccepted ? "approved" : "pending",
+    paymentStatus: payload.quotation.advancePayment > 0 ? "partial" : "pending",
+    laborCost: 0,
+    otherCost: 0,
+    discount: 0,
+    workSeconds: 0,
+    parts: [],
+    externalWorks: [],
+    history: [{ id: `H-${Date.now()}`, at: payload.createdAt, type: "created", title: "Orden creada", detail: `Registrada por ${payload.createdBy.name}` }]
+  });
+  persistWorkOrders();
+  safeStorageRemove("torqueflow-new-order-draft");
+  renderMetrics();
+  renderPriorityOrders();
+  renderWorkOrdersModule();
+  drawOrdersChart();
+  document.querySelector("#successOrderNumber").textContent = payload.id;
+  document.querySelector("#successOrderDescription").textContent = `${payload.vehicle.brand} ${payload.vehicle.model} · ${payload.vehicle.plate} fue registrado a nombre de ${payload.customer.name}.`;
+  document.querySelector("#successOrderTotal").textContent = currencyWithDecimals(payload.quotation.estimatedTotal);
+  document.querySelector("#successPromisedDate").textContent = payload.reception.promisedAt ? new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(payload.reception.promisedAt)) : "Por definir";
+  UI.jsonPreviewDialog.close();
+  UI.orderSuccessDialog.showModal();
+}
+
+function saveNewOrderDraft() {
+  const draft = buildOrderPayload();
+  safeStorageSet("torqueflow-new-order-draft", JSON.stringify(draft));
+  const status = document.querySelector("#draftStatus");
+  status.classList.add("is-saved");
+  status.innerHTML = "<i></i> Borrador guardado";
+  showToast("Borrador guardado", "Puedes continuar editándolo en este navegador.", "save");
+}
+
+function markDraftDirty() {
+  const status = document.querySelector("#draftStatus");
+  if (!status) return;
+  status.classList.remove("is-saved");
+  status.innerHTML = "<i></i> Cambios sin guardar";
+}
+
+function resetNewOrderForm() {
+  UI.newOrderForm.reset();
+  newOrderState.selectedServices.clear();
+  newOrderState.photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+  newOrderState.photos = [];
+  document.querySelector("#photoPreviewGrid").innerHTML = "";
+  document.querySelector("#fuelLevel").value = 50;
+  document.querySelector("#fuelLevelText").textContent = "50%";
+  document.querySelector("#customServiceForm").hidden = true;
+  document.querySelector("#existingClientBanner").hidden = true;
+  document.querySelectorAll(".is-invalid").forEach((element) => element.classList.remove("is-invalid"));
+  setDefaultOrderDates();
+  renderServiceCatalog();
+  renderSelectedServices();
+  updateNextOrderNumber();
+  markDraftDirty();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function handleClientLookup() {
+  const name = document.querySelector("#clientName").value.trim().toLowerCase();
+  const match = existingClients.find((client) => client.name.toLowerCase() === name);
+  const banner = document.querySelector("#existingClientBanner");
+  if (!match) {
+    banner.hidden = true;
+    return;
+  }
+  document.querySelector("#clientDocument").value = match.document;
+  document.querySelector("#clientPhone").value = match.phone;
+  document.querySelector("#clientEmail").value = match.email;
+  document.querySelector("#existingClientText").textContent = `${match.phone} · Datos completados automáticamente.`;
+  banner.hidden = false;
+  updateOrderSummary();
+}
+
+function handlePhotoSelection(files) {
+  const availableSlots = 6 - newOrderState.photos.length;
+  [...files].slice(0, availableSlots).forEach((file) => {
+    if (!file.type.startsWith("image/")) return;
+    newOrderState.photos.push({ name: file.name, type: file.type, size: file.size, url: URL.createObjectURL(file) });
+  });
+  renderPhotoPreviews();
+  if (files.length > availableSlots) showToast("Límite de fotografías", "Solo se permiten hasta 6 evidencias por orden.", "camera");
+}
+
+function renderPhotoPreviews() {
+  const grid = document.querySelector("#photoPreviewGrid");
+  grid.innerHTML = newOrderState.photos.map((photo, index) => `
+    <figure class="photo-thumb"><img src="${photo.url}" alt="Evidencia ${index + 1}: ${escapeHTML(photo.name)}"><button type="button" data-remove-photo="${index}" aria-label="Eliminar foto"><svg><use href="#icon-x"></use></svg></button></figure>
+  `).join("");
+}
+
+function initializeNewOrderModule() {
+  if (!UI.newOrderForm) return;
+  setDefaultOrderDates();
+  renderServiceCatalog();
+  renderSelectedServices();
+  updateNextOrderNumber();
+  updateSectionCompleteness();
+}
+
+
+/* =========================================================
+   Módulo de catálogo y control de órdenes de trabajo
+   ========================================================= */
+const mechanicNames = ["José Ramírez", "Luis Pérez", "Miguel Rojas", "Sin asignar"];
+const priorityConfig = {
+  1: { label: "Urgente", className: "1" },
+  2: { label: "Alta", className: "2" },
+  3: { label: "Normal", className: "3" },
+  4: { label: "Baja", className: "4" },
+  5: { label: "Programada", className: "5" }
+};
+
+function deepClone(value) {
+  return typeof structuredClone === "function" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+}
+
+function hydrateWorkOrders() {
+  if (!workOrdersState.restoredFromStorage) {
+    workOrdersState.restoredFromStorage = true;
+    try {
+      const storedOrders = JSON.parse(safeStorageGet("torqueflow-work-orders") || "null");
+      if (Array.isArray(storedOrders) && storedOrders.length) appData.orders.splice(0, appData.orders.length, ...storedOrders);
+    } catch (error) {
+      console.warn("No se pudo restaurar el catálogo local de órdenes.", error);
+    }
+  }
+  appData.orders.forEach((order) => {
+    const seed = workOrderDetailsSeed[order.id] || {};
+    order.diagnosis ??= seed.diagnosis || `Diagnóstico inicial pendiente para ${order.service}.`;
+    order.notes ??= seed.notes || "";
+    order.approvalStatus ??= seed.approvalStatus || "pending";
+    order.paymentStatus ??= seed.paymentStatus || "pending";
+    order.laborCost ??= seed.laborCost ?? Number(order.currentCost || 0);
+    order.otherCost ??= seed.otherCost || 0;
+    order.discount ??= seed.discount || 0;
+    order.workSeconds ??= seed.workSeconds || 0;
+    order.timerStartedAt ??= null;
+    order.parts ??= deepClone(seed.parts || []);
+    order.externalWorks ??= deepClone(seed.externalWorks || []);
+    order.history ??= [
+      { id: `H-${order.id}-1`, at: order.enteredAt, type: "created", title: "Ingreso registrado", detail: `${order.vehicle} ingresó al taller.` },
+      { id: `H-${order.id}-2`, at: order.enteredAt, type: "assigned", title: "Mecánico asignado", detail: order.mechanic || "Sin asignar" }
+    ];
+    order.currentCost = calculateOrderCosts(order).total;
+  });
+}
+
+function persistWorkOrders() {
+  safeStorageSet("torqueflow-work-orders", JSON.stringify(appData.orders));
+}
+
+function calculateOrderCosts(order) {
+  const parts = (order.parts || []).reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.unitCost || 0), 0);
+  const external = (order.externalWorks || []).reduce((sum, item) => sum + Number(item.cost || 0), 0);
+  const labor = Math.max(0, Number(order.laborCost || 0));
+  const other = Math.max(0, Number(order.otherCost || 0));
+  const discount = Math.max(0, Number(order.discount || 0));
+  return { parts, external, labor, other, discount, total: Math.max(0, parts + external + labor + other - discount) };
+}
+
+function getCostHealth(order) {
+  const total = calculateOrderCosts(order).total;
+  const budget = Math.max(0, Number(order.budget || 0));
+  const percentage = budget ? Math.round(total / budget * 100) : 0;
+  if (budget && percentage > 100) return { key: "exceeded", label: "Excedido", percentage, className: "is-exceeded" };
+  if (budget && percentage >= 85) return { key: "risk", label: "En riesgo", percentage, className: "is-risk" };
+  return { key: "healthy", label: "Controlado", percentage, className: "is-healthy" };
+}
+
+function isWorkOrderDelayed(order) {
+  if (order.status === "listo") return false;
+  return order.status === "refaccionaria" || (order.promisedAt && new Date(order.promisedAt).getTime() < Date.now());
+}
+
+function formatDateShort(value) {
+  if (!value) return "Sin fecha";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Sin fecha";
+  return new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
+function toDateTimeLocal(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function hoursBetween(start, end = new Date()) {
+  if (!start) return 0;
+  const startTime = new Date(start).getTime();
+  const endTime = end instanceof Date ? end.getTime() : new Date(end).getTime();
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) return 0;
+  return Math.max(0, (endTime - startTime) / 3600000);
+}
+
+function formatDuration(hours) {
+  if (!Number.isFinite(hours) || hours <= 0) return "0 h";
+  if (hours < 1) return `${Math.round(hours * 60)} min`;
+  const whole = Math.floor(hours);
+  const minutes = Math.round((hours - whole) * 60);
+  return minutes ? `${whole} h ${minutes} min` : `${whole} h`;
+}
+
+function renderWorkOrdersMetrics() {
+  if (!UI.workOrdersMetrics) return;
+  const active = appData.orders.filter((order) => order.status !== "listo").length;
+  const waiting = appData.orders.filter((order) => order.status === "esperando" || order.status === "refaccionaria").length;
+  const delayed = appData.orders.filter(isWorkOrderDelayed).length;
+  const risk = appData.orders.filter((order) => ["risk", "exceeded"].includes(getCostHealth(order).key)).length;
+  const committed = appData.orders.reduce((sum, order) => sum + calculateOrderCosts(order).total, 0);
+  const stats = [
+    { label: "Órdenes activas", value: active, helper: `${appData.orders.length} registradas`, icon: "wrench", color: "#2f8cff", soft: "rgba(47,140,255,.12)" },
+    { label: "Esperas externas", value: waiting, helper: "Repuestos o terceros", icon: "clock", color: "#ff8a2b", soft: "rgba(255,138,43,.12)" },
+    { label: "Entregas demoradas", value: delayed, helper: delayed ? "Requieren seguimiento" : "Todo a tiempo", icon: "alert", color: "#ff6577", soft: "rgba(255,101,119,.12)" },
+    { label: "Costos en riesgo", value: risk, helper: "Sobre 85% del presupuesto", icon: "wallet", color: "#f6c85f", soft: "rgba(246,200,95,.12)" },
+    { label: "Capital comprometido", value: currencyWithDecimals(committed), helper: "Costo real acumulado", icon: "dollar", color: "#34c987", soft: "rgba(52,201,135,.12)" }
+  ];
+  UI.workOrdersMetrics.innerHTML = stats.map((stat) => `<article class="work-order-stat" style="--stat-color:${stat.color};--stat-soft:${stat.soft}"><span class="work-order-stat__icon"><svg><use href="#icon-${stat.icon}"></use></svg></span><div><span>${escapeHTML(stat.label)}</span><strong>${escapeHTML(stat.value)}</strong><small>${escapeHTML(stat.helper)}</small></div></article>`).join("");
+}
+
+function populateMechanicFilters() {
+  const options = mechanicNames.map((name) => `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`).join("");
+  const filter = document.querySelector("#ordersMechanicFilter");
+  const bulk = document.querySelector("#bulkMechanic");
+  if (filter && filter.options.length <= 1) filter.insertAdjacentHTML("beforeend", options);
+  if (bulk && bulk.options.length <= 1) bulk.insertAdjacentHTML("beforeend", options);
+}
+
+function getFilteredWorkOrders() {
+  const query = workOrdersState.search.trim().toLowerCase();
+  const filtered = appData.orders.filter((order) => {
+    const text = [order.id, order.plate, order.vehicle, order.client, order.phone, order.mechanic, order.service, order.diagnosis].join(" ").toLowerCase();
+    const health = getCostHealth(order);
+    return (!query || text.includes(query))
+      && (workOrdersState.filters.status === "all" || order.status === workOrdersState.filters.status)
+      && (workOrdersState.filters.mechanic === "all" || order.mechanic === workOrdersState.filters.mechanic)
+      && (workOrdersState.filters.priority === "all" || String(order.priority) === workOrdersState.filters.priority)
+      && (workOrdersState.filters.cost === "all" || health.key === workOrdersState.filters.cost);
+  });
+  return filtered.sort((a, b) => {
+    if (workOrdersState.sort === "promise") return new Date(a.promisedAt) - new Date(b.promisedAt);
+    if (workOrdersState.sort === "budget-desc") return calculateOrderCosts(b).total - calculateOrderCosts(a).total;
+    if (workOrdersState.sort === "recent") return new Date(b.enteredAt) - new Date(a.enteredAt);
+    return Number(a.priority || 5) - Number(b.priority || 5) || new Date(a.promisedAt) - new Date(b.promisedAt);
+  });
+}
+
+function getOrderAlerts(order) {
+  const alerts = [];
+  const health = getCostHealth(order);
+  if (health.key === "exceeded") alerts.push({ text: `Presupuesto +${health.percentage - 100}%`, danger: true });
+  else if (health.key === "risk") alerts.push({ text: `Costo al ${health.percentage}%`, danger: false });
+  if (isWorkOrderDelayed(order)) alerts.push({ text: order.status === "refaccionaria" ? "Seguimiento externo" : "Entrega vencida", danger: true });
+  if (order.approvalStatus === "pending") alerts.push({ text: "Aprobación pendiente", danger: false });
+  return alerts;
+}
+
+function workOrderCardTemplate(order) {
+  const costs = calculateOrderCosts(order);
+  const health = getCostHealth(order);
+  const priority = priorityConfig[order.priority] || priorityConfig[5];
+  const alerts = getOrderAlerts(order);
+  const selected = workOrdersState.selected.has(order.id);
+  return `<article class="work-order-card ${selected ? "is-selected" : ""}" draggable="true" data-drag-order="${escapeHTML(order.id)}" data-work-order-open="${escapeHTML(order.id)}">
+    <div class="work-order-card__top"><div class="work-order-card__identity"><label class="order-select" data-order-select><input type="checkbox" data-select-work-order="${escapeHTML(order.id)}" ${selected ? "checked" : ""} aria-label="Seleccionar ${escapeHTML(order.id)}"></label><div><strong>${escapeHTML(order.id)}</strong><small>Ingreso ${formatDateShort(order.enteredAt)}</small></div></div><span class="priority-badge priority-badge--${priority.className}">${priority.label}</span></div>
+    <div class="work-order-card__vehicle"><strong>${escapeHTML(order.plate)}</strong><span>${escapeHTML(order.vehicle)}</span></div>
+    <div class="work-order-card__service">${escapeHTML(order.service)}</div>
+    <div class="work-order-card__meta"><div><span>Mecánico</span><strong>${escapeHTML(order.mechanic || "Sin asignar")}</strong></div><div><span>Entrega</span><strong>${formatDateShort(order.promisedAt)}</strong></div></div>
+    ${alerts.length ? `<div class="work-order-card__alerts">${alerts.map((alert) => `<span class="mini-alert ${alert.danger ? "is-danger" : ""}"><svg><use href="#icon-alert"></use></svg>${escapeHTML(alert.text)}</span>`).join("")}</div>` : ""}
+    <div class="card-cost-control ${health.className}"><div class="card-cost-control__head"><span>Costo real</span><strong>${health.percentage}%</strong></div><div class="progress"><span style="--progress:${Math.min(100, health.percentage)}%"></span></div><div class="card-cost-control__foot"><strong>${currencyWithDecimals(costs.total)}</strong><span>de ${currencyWithDecimals(order.budget)}</span></div></div>
+    <div class="work-order-card__footer"><div class="card-client"><strong>${escapeHTML(order.client)}</strong><span>${escapeHTML(order.phone || "Sin teléfono")}</span></div><button class="card-open-button" type="button" data-work-order-open="${escapeHTML(order.id)}">Editar <svg><use href="#icon-chevron"></use></svg></button></div>
+  </article>`;
+}
+
+function renderOrdersKanban(orders) {
+  const statuses = ["revision", "esperando", "refaccionaria", "listo"];
+  UI.ordersKanban.innerHTML = statuses.map((statusKey) => {
+    const status = statusConfig[statusKey];
+    const items = orders.filter((order) => order.status === statusKey);
+    const amount = items.reduce((sum, order) => sum + calculateOrderCosts(order).total, 0);
+    return `<section class="kanban-column" data-drop-status="${statusKey}" style="--column-color:${status.color}"><header class="kanban-column__header"><div class="kanban-column__title"><i></i><strong>${status.label}</strong><span>${items.length}</span></div><small class="kanban-column__amount">${currencyWithDecimals(amount)}</small></header><div class="kanban-column__body">${items.length ? items.map(workOrderCardTemplate).join("") : '<div class="kanban-empty">Arrastra una orden aquí o crea una nueva.</div>'}</div></section>`;
+  }).join("");
+}
+
+function renderOrdersTable(orders) {
+  UI.ordersTableBody.innerHTML = orders.map((order) => {
+    const costs = calculateOrderCosts(order);
+    const health = getCostHealth(order);
+    const status = statusConfig[order.status];
+    const selected = workOrdersState.selected.has(order.id);
+    return `<tr class="${selected ? "is-selected" : ""}" data-work-order-open="${escapeHTML(order.id)}"><td><label class="order-select" data-order-select><input type="checkbox" data-select-work-order="${escapeHTML(order.id)}" ${selected ? "checked" : ""} aria-label="Seleccionar ${escapeHTML(order.id)}"></label></td><td><div class="table-order-main"><strong>${escapeHTML(order.id)} · ${escapeHTML(order.plate)}</strong><span>${escapeHTML(order.vehicle)}</span></div></td><td><div class="table-client-main"><strong>${escapeHTML(order.client)}</strong><span>${escapeHTML(order.service)}</span></div></td><td><span class="pill pill--${status.pill}">${status.label}</span></td><td>${escapeHTML(order.mechanic || "Sin asignar")}</td><td>${formatDateShort(order.promisedAt)}</td><td><div class="table-cost"><div><strong>${currencyWithDecimals(costs.total)}</strong><span>${health.percentage}% de ${currencyWithDecimals(order.budget)}</span></div><div class="progress"><span style="--progress:${Math.min(100, health.percentage)}%"></span></div></div></td><td><button class="icon-button" type="button" data-work-order-open="${escapeHTML(order.id)}" aria-label="Editar ${escapeHTML(order.id)}"><svg><use href="#icon-edit"></use></svg></button></td></tr>`;
+  }).join("");
+}
+
+function updateBulkActions() {
+  const count = workOrdersState.selected.size;
+  const bulk = document.querySelector("#bulkActions");
+  if (!bulk) return;
+  bulk.hidden = count === 0;
+  document.querySelector("#bulkSelectedCount").textContent = `${count} seleccionada${count === 1 ? "" : "s"}`;
+}
+
+function renderWorkOrdersModule() {
+  if (!UI.workOrdersView) return;
+  hydrateWorkOrders();
+  populateMechanicFilters();
+  renderWorkOrdersMetrics();
+  const orders = getFilteredWorkOrders();
+  const hasFilters = workOrdersState.search || Object.values(workOrdersState.filters).some((value) => value !== "all");
+  document.querySelector("#ordersResultCount").textContent = `${orders.length} orden${orders.length === 1 ? "" : "es"}`;
+  document.querySelector("#ordersFilterSummary").textContent = hasFilters ? "Resultado de búsqueda y filtros aplicados" : "Mostrando toda la operación";
+  UI.ordersKanban.hidden = workOrdersState.viewMode !== "kanban" || orders.length === 0;
+  UI.ordersTableView.hidden = workOrdersState.viewMode !== "table" || orders.length === 0;
+  UI.ordersEmptyState.hidden = orders.length > 0;
+  renderOrdersKanban(orders);
+  renderOrdersTable(orders);
+  document.querySelectorAll("[data-orders-view]").forEach((button) => {
+    const active = button.dataset.ordersView === workOrdersState.viewMode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  const selectAll = document.querySelector("#selectAllVisibleOrders");
+  selectAll.checked = orders.length > 0 && orders.every((order) => workOrdersState.selected.has(order.id));
+  selectAll.indeterminate = orders.some((order) => workOrdersState.selected.has(order.id)) && !selectAll.checked;
+  updateBulkActions();
+}
+
+function resetWorkOrderFilters() {
+  workOrdersState.search = "";
+  workOrdersState.filters = { status: "all", mechanic: "all", priority: "all", cost: "all" };
+  workOrdersState.sort = "priority";
+  document.querySelector("#ordersCatalogSearch").value = "";
+  document.querySelector("#ordersStatusFilter").value = "all";
+  document.querySelector("#ordersMechanicFilter").value = "all";
+  document.querySelector("#ordersPriorityFilter").value = "all";
+  document.querySelector("#ordersCostFilter").value = "all";
+  document.querySelector("#ordersSort").value = "priority";
+  renderWorkOrdersModule();
+}
+
+function addOrderHistory(order, type, title, detail) {
+  order.history ??= [];
+  order.history.unshift({ id: `H-${Date.now()}-${Math.random().toString(16).slice(2)}`, at: new Date().toISOString(), type, title, detail });
+}
+
+function changeOrdersStatus(orderIds, status) {
+  if (!status) return;
+  orderIds.forEach((id) => {
+    const order = appData.orders.find((item) => item.id === id);
+    if (!order || order.status === status) return;
+    order.status = status;
+    addOrderHistory(order, "status", "Estado actualizado", `La orden pasó a ${statusConfig[status].label}.`);
+  });
+  persistWorkOrders();
+  renderWorkOrdersModule();
+  renderMetrics();
+  renderPriorityOrders();
+  drawOrdersChart();
+}
+
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function setEditorTab(tabName) {
+  workOrdersState.editorTab = tabName;
+  document.querySelectorAll("[data-editor-tab]").forEach((button) => button.classList.toggle("is-active", button.dataset.editorTab === tabName));
+  document.querySelectorAll("[data-editor-panel]").forEach((panel) => {
+    const active = panel.dataset.editorPanel === tabName;
+    panel.classList.toggle("is-active", active);
+    panel.hidden = !active;
+  });
+}
+
+function openOrderEditor(orderId) {
+  hydrateWorkOrders();
+  const order = appData.orders.find((item) => item.id === orderId);
+  if (!order) return;
+  workOrdersState.editorOrderId = orderId;
+  workOrdersState.editorDraft = deepClone(order);
+  const draft = workOrdersState.editorDraft;
+  document.querySelector("#editorOrderId").textContent = draft.id;
+  document.querySelector("#editorVehicleTitle").textContent = `${draft.plate} · ${draft.vehicle}`;
+  document.querySelector("#editorClientTitle").textContent = draft.client;
+  document.querySelector("#editorStatus").value = draft.status;
+  document.querySelector("#editorDiagnosis").value = draft.diagnosis || "";
+  document.querySelector("#editorService").value = draft.service || "";
+  document.querySelector("#editorMechanic").value = mechanicNames.includes(draft.mechanic) ? draft.mechanic : "Sin asignar";
+  document.querySelector("#editorPriority").value = String(draft.priority || 3);
+  document.querySelector("#editorEnteredAt").value = toDateTimeLocal(draft.enteredAt);
+  document.querySelector("#editorPromisedAt").value = toDateTimeLocal(draft.promisedAt);
+  document.querySelector("#editorApproval").value = draft.approvalStatus || "pending";
+  document.querySelector("#editorPayment").value = draft.paymentStatus || "pending";
+  document.querySelector("#editorNotes").value = draft.notes || "";
+  document.querySelector("#editorCustomerName").textContent = draft.client || "—";
+  document.querySelector("#editorCustomerPhone").textContent = draft.phone || "—";
+  document.querySelector("#editorLaborCost").value = Number(draft.laborCost || 0).toFixed(2);
+  document.querySelector("#editorOtherCost").value = Number(draft.otherCost || 0).toFixed(2);
+  document.querySelector("#editorDiscount").value = Number(draft.discount || 0).toFixed(2);
+  document.querySelector("#editorSaveState").className = "editor-save-state";
+  document.querySelector("#editorSaveState").innerHTML = "<i></i> Sin cambios";
+  setEditorTab("summary");
+  renderEditorParts();
+  renderEditorExternalWorks();
+  renderEditorTimeline();
+  refreshEditorTotals();
+  resetExternalEntryForm();
+  updateEditorTimerDisplay();
+  startEditorTimerInterval();
+  UI.orderEditorDialog.showModal();
+}
+
+function syncEditorDraftFromFields() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  draft.status = document.querySelector("#editorStatus").value;
+  draft.diagnosis = document.querySelector("#editorDiagnosis").value.trim();
+  draft.service = document.querySelector("#editorService").value.trim();
+  draft.mechanic = document.querySelector("#editorMechanic").value;
+  draft.priority = Number(document.querySelector("#editorPriority").value);
+  draft.enteredAt = document.querySelector("#editorEnteredAt").value ? new Date(document.querySelector("#editorEnteredAt").value).toISOString() : draft.enteredAt;
+  draft.promisedAt = document.querySelector("#editorPromisedAt").value ? new Date(document.querySelector("#editorPromisedAt").value).toISOString() : draft.promisedAt;
+  draft.approvalStatus = document.querySelector("#editorApproval").value;
+  draft.paymentStatus = document.querySelector("#editorPayment").value;
+  draft.notes = document.querySelector("#editorNotes").value.trim();
+  draft.laborCost = Math.max(0, Number(document.querySelector("#editorLaborCost").value) || 0);
+  draft.otherCost = Math.max(0, Number(document.querySelector("#editorOtherCost").value) || 0);
+  draft.discount = Math.max(0, Number(document.querySelector("#editorDiscount").value) || 0);
+}
+
+function markEditorDirty() {
+  const state = document.querySelector("#editorSaveState");
+  state.className = "editor-save-state is-dirty";
+  state.innerHTML = "<i></i> Cambios sin guardar";
+}
+
+function renderEditorParts() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  const body = document.querySelector("#editorPartsBody");
+  const empty = document.querySelector("#editorPartsEmpty");
+  empty.hidden = draft.parts.length > 0;
+  body.innerHTML = draft.parts.map((part) => `<tr data-part-row="${escapeHTML(part.id)}"><td><strong>${escapeHTML(part.name)}</strong><small>${escapeHTML(part.supplier || "Sin referencia")}</small></td><td><input type="number" min="0.01" step="0.01" value="${Number(part.qty)}" data-part-field="qty" data-part-id="${escapeHTML(part.id)}" aria-label="Cantidad de ${escapeHTML(part.name)}"></td><td><input type="number" min="0" step="0.01" value="${Number(part.unitCost).toFixed(2)}" data-part-field="unitCost" data-part-id="${escapeHTML(part.id)}" aria-label="Costo de ${escapeHTML(part.name)}"></td><td><strong>${currencyWithDecimals(Number(part.qty) * Number(part.unitCost))}</strong></td><td><button type="button" data-remove-part="${escapeHTML(part.id)}" aria-label="Eliminar ${escapeHTML(part.name)}"><svg><use href="#icon-trash"></use></svg></button></td></tr>`).join("");
+  document.querySelector("#editorPartsCount").textContent = draft.parts.length;
+  refreshEditorTotals();
+}
+
+function addPartToEditor() {
+  const name = document.querySelector("#partNameInput").value.trim();
+  const qty = Math.max(0, Number(document.querySelector("#partQtyInput").value) || 0);
+  const unitCost = Math.max(0, Number(document.querySelector("#partCostInput").value) || 0);
+  const supplier = document.querySelector("#partSupplierInput").value.trim();
+  if (!name || qty <= 0) {
+    showToast("Pieza incompleta", "Ingresa el nombre y una cantidad válida.", "alert");
+    return;
+  }
+  workOrdersState.editorDraft.parts.push({ id: `P-${Date.now()}`, name, qty, unitCost, supplier });
+  document.querySelector("#partNameInput").value = "";
+  document.querySelector("#partQtyInput").value = "1";
+  document.querySelector("#partCostInput").value = "";
+  document.querySelector("#partSupplierInput").value = "";
+  renderEditorParts();
+  markEditorDirty();
+}
+
+function externalWorkHours(item) {
+  if (!item.outAt) return 0;
+  return hoursBetween(item.outAt, item.returnAt || new Date());
+}
+
+function renderEditorExternalWorks() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  const list = document.querySelector("#externalWorkList");
+  const empty = document.querySelector("#externalWorkEmpty");
+  empty.hidden = draft.externalWorks.length > 0;
+  list.innerHTML = draft.externalWorks.map((item) => `<article class="external-work-item"><div class="external-work-item__top"><div><strong>${escapeHTML(item.type)} · ${escapeHTML(item.vendor || "Proveedor sin registrar")}</strong><span class="pill pill--${item.status === "returned" ? "success" : item.status === "in_progress" ? "warning" : "info"}">${item.status === "returned" ? "Regresó" : item.status === "in_progress" ? "En proceso" : "Pendiente"}</span></div><button type="button" data-remove-external="${escapeHTML(item.id)}" aria-label="Eliminar trabajo externo"><svg><use href="#icon-trash"></use></svg></button></div><p class="external-work-item__description">${escapeHTML(item.description || "Sin descripción")}</p><div class="external-work-item__details"><div><span>Salida</span><strong>${formatDateShort(item.outAt)}</strong></div><div><span>Tiempo externo</span><strong>${formatDuration(externalWorkHours(item))}</strong></div><div><span>Costo</span><strong>${currencyWithDecimals(item.cost)}</strong></div></div></article>`).join("");
+  document.querySelector("#editorExternalCount").textContent = draft.externalWorks.length;
+  const totalHours = draft.externalWorks.reduce((sum, item) => sum + externalWorkHours(item), 0);
+  document.querySelector("#externalTimePill").textContent = `${formatDuration(totalHours)} externas`;
+  refreshEditorTotals();
+  updateEditorTimeOverview();
+}
+
+function resetExternalEntryForm() {
+  ["#externalVendorInput", "#externalDescriptionInput", "#externalCostInput"].forEach((selector) => { const element = document.querySelector(selector); if (element) element.value = ""; });
+  const now = new Date();
+  document.querySelector("#externalOutInput").value = toDateTimeLocal(now);
+  document.querySelector("#externalReturnInput").value = "";
+  document.querySelector("#externalTypeInput").value = "Torno";
+  document.querySelector("#externalStatusInput").value = "in_progress";
+}
+
+function addExternalWorkToEditor() {
+  const type = document.querySelector("#externalTypeInput").value;
+  const vendor = document.querySelector("#externalVendorInput").value.trim();
+  const description = document.querySelector("#externalDescriptionInput").value.trim();
+  const outValue = document.querySelector("#externalOutInput").value;
+  const returnValue = document.querySelector("#externalReturnInput").value;
+  const cost = Math.max(0, Number(document.querySelector("#externalCostInput").value) || 0);
+  const status = document.querySelector("#externalStatusInput").value;
+  if (!vendor || !description || !outValue) {
+    showToast("Trabajo externo incompleto", "Registra proveedor, descripción y hora de salida.", "alert");
+    return;
+  }
+  workOrdersState.editorDraft.externalWorks.push({ id: `EXT-${Date.now()}`, type, vendor, description, outAt: new Date(outValue).toISOString(), returnAt: returnValue ? new Date(returnValue).toISOString() : null, cost, status });
+  renderEditorExternalWorks();
+  resetExternalEntryForm();
+  markEditorDirty();
+}
+
+function refreshEditorTotals() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  syncEditorDraftFromFields();
+  const costs = calculateOrderCosts(draft);
+  draft.currentCost = costs.total;
+  const health = getCostHealth(draft);
+  const margin = Number(draft.budget || 0) - costs.total;
+  document.querySelector("#editorBudgetQuick").textContent = currencyWithDecimals(draft.budget);
+  document.querySelector("#editorCostQuick").textContent = currencyWithDecimals(costs.total);
+  document.querySelector("#editorMarginQuick").textContent = currencyWithDecimals(margin);
+  document.querySelector("#editorMarginQuick").style.color = margin < 0 ? "#ff6577" : "";
+  document.querySelector("#editorElapsedQuick").textContent = formatDuration(hoursBetween(draft.enteredAt));
+  document.querySelector("#editorPartsSubtotal").textContent = currencyWithDecimals(costs.parts);
+  document.querySelector("#partsSubtotalPill").textContent = currencyWithDecimals(costs.parts);
+  document.querySelector("#editorExternalSubtotal").textContent = currencyWithDecimals(costs.external);
+  document.querySelector("#editorLaborSubtotal").textContent = currencyWithDecimals(costs.labor + costs.other - costs.discount);
+  document.querySelector("#editorGrandTotal").textContent = currencyWithDecimals(costs.total);
+  document.querySelector("#editorCostPercent").textContent = `${health.percentage}%`;
+  document.querySelector("#editorCostBar").style.setProperty("--progress", `${Math.min(100, health.percentage)}%`);
+  const healthCard = document.querySelector("#editorCostHealth");
+  healthCard.classList.toggle("is-risk", health.key === "risk");
+  healthCard.classList.toggle("is-exceeded", health.key === "exceeded");
+  document.querySelector("#editorCostMessage").textContent = !draft.budget ? "Sin presupuesto configurado." : health.key === "exceeded" ? `Se excedió el presupuesto en ${currencyWithDecimals(costs.total - draft.budget)}.` : `Quedan ${currencyWithDecimals(Math.max(0, draft.budget - costs.total))} disponibles.`;
+  updateEditorTimeOverview();
+}
+
+function renderEditorTimeline() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  const timeline = [...(draft.history || [])].sort((a, b) => new Date(b.at) - new Date(a.at));
+  document.querySelector("#editorTimeline").innerHTML = timeline.map((entry) => `<article class="timeline-entry"><span class="timeline-entry__icon"><svg><use href="#icon-${entry.type === "status" ? "refresh" : entry.type === "cost" ? "wallet" : entry.type === "assigned" ? "user" : "check"}"></use></svg></span><div class="timeline-entry__content"><strong>${escapeHTML(entry.title)}</strong><span>${escapeHTML(entry.detail || "")}</span></div><time>${formatDateShort(entry.at)}</time></article>`).join("") || '<div class="cost-empty">Sin actividad registrada.</div>';
+}
+
+function getDraftWorkSeconds() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return 0;
+  const base = Number(draft.workSeconds || 0);
+  if (!draft.timerStartedAt) return base;
+  return base + Math.max(0, Math.floor((Date.now() - new Date(draft.timerStartedAt).getTime()) / 1000));
+}
+
+function secondsToClock(seconds) {
+  const safe = Math.max(0, Math.floor(seconds));
+  const h = String(Math.floor(safe / 3600)).padStart(2, "0");
+  const m = String(Math.floor((safe % 3600) / 60)).padStart(2, "0");
+  const s = String(safe % 60).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
+function updateEditorTimerDisplay() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  document.querySelector("#workTimerDisplay").textContent = secondsToClock(getDraftWorkSeconds());
+  document.querySelector("#workTimerStatus").textContent = draft.timerStartedAt ? `En marcha · ${escapeHTML(draft.mechanic || "Mecánico")}` : "Cronómetro detenido";
+  const button = document.querySelector("#toggleWorkTimer");
+  button.innerHTML = draft.timerStartedAt ? '<svg><use href="#icon-pause"></use></svg><span>Pausar trabajo</span>' : '<svg><use href="#icon-play"></use></svg><span>Iniciar trabajo</span>';
+  updateEditorTimeOverview();
+}
+
+function startEditorTimerInterval() {
+  window.clearInterval(workOrdersState.timerInterval);
+  workOrdersState.timerInterval = window.setInterval(updateEditorTimerDisplay, 1000);
+}
+
+function toggleEditorTimer() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  if (draft.timerStartedAt) {
+    draft.workSeconds = getDraftWorkSeconds();
+    draft.timerStartedAt = null;
+  } else {
+    draft.timerStartedAt = new Date().toISOString();
+  }
+  updateEditorTimerDisplay();
+  markEditorDirty();
+}
+
+function resetEditorTimer() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  draft.workSeconds = 0;
+  draft.timerStartedAt = null;
+  updateEditorTimerDisplay();
+  markEditorDirty();
+}
+
+function updateEditorTimeOverview() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  const workshopHours = hoursBetween(draft.enteredAt);
+  const effectiveHours = getDraftWorkSeconds() / 3600;
+  const externalHours = (draft.externalWorks || []).reduce((sum, item) => sum + externalWorkHours(item), 0);
+  const deviation = draft.promisedAt ? (Date.now() - new Date(draft.promisedAt).getTime()) / 3600000 : 0;
+  document.querySelector("#timeTotalWorkshop").textContent = formatDuration(workshopHours);
+  document.querySelector("#timeEffectiveWork").textContent = formatDuration(effectiveHours);
+  document.querySelector("#timeExternalLost").textContent = formatDuration(externalHours);
+  document.querySelector("#timeDeviation").textContent = draft.status === "listo" && deviation <= 0 ? "Entregado a tiempo" : deviation > 0 ? `${formatDuration(deviation)} de retraso` : "A tiempo";
+}
+
+function saveEditorChanges() {
+  const original = appData.orders.find((order) => order.id === workOrdersState.editorOrderId);
+  const draft = workOrdersState.editorDraft;
+  if (!original || !draft) return;
+  syncEditorDraftFromFields();
+  draft.currentCost = calculateOrderCosts(draft).total;
+  addOrderHistory(draft, "cost", "Orden actualizada", `Costos y datos guardados por Leonardo Acuña. Total real: ${currencyWithDecimals(draft.currentCost)}.`);
+  Object.assign(original, deepClone(draft));
+  persistWorkOrders();
+  document.querySelector("#editorSaveState").className = "editor-save-state is-saved";
+  document.querySelector("#editorSaveState").innerHTML = "<i></i> Cambios guardados";
+  renderWorkOrdersModule();
+  renderMetrics();
+  renderPriorityOrders();
+  drawOrdersChart();
+  showToast("Orden actualizada", `${original.id} guardó un costo real de ${currencyWithDecimals(original.currentCost)}.`, "save");
+  window.setTimeout(() => UI.orderEditorDialog.close(), 250);
+}
+
+function closeOrderEditor() {
+  window.clearInterval(workOrdersState.timerInterval);
+  workOrdersState.timerInterval = null;
+  if (UI.orderEditorDialog?.open) UI.orderEditorDialog.close();
+}
+
+function exportOrder(order) {
+  downloadJSON(order, `${order.id.toLowerCase()}-${order.plate.toLowerCase()}.json`);
+}
+
+function printOrder(order) {
+  const costs = calculateOrderCosts(order);
+  const partsRows = (order.parts || []).map((part) => `<tr><td>${escapeHTML(part.name)}</td><td>${part.qty}</td><td>${currencyWithDecimals(part.unitCost)}</td><td>${currencyWithDecimals(part.qty * part.unitCost)}</td></tr>`).join("") || '<tr><td colspan="4">Sin piezas registradas</td></tr>';
+  const externalRows = (order.externalWorks || []).map((item) => `<tr><td>${escapeHTML(item.type)}</td><td>${escapeHTML(item.vendor)}</td><td>${formatDuration(externalWorkHours(item))}</td><td>${currencyWithDecimals(item.cost)}</td></tr>`).join("") || '<tr><td colspan="4">Sin trabajos externos</td></tr>';
+  const popup = window.open("", "_blank", "width=900,height=760");
+  if (!popup) { showToast("Ventana bloqueada", "Permite ventanas emergentes para imprimir la ficha.", "alert"); return; }
+  popup.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${order.id}</title><style>body{font-family:Arial,sans-serif;color:#17202c;padding:30px}header{display:flex;justify-content:space-between;border-bottom:2px solid #1976d2;padding-bottom:15px}.muted{color:#64748b}h1{margin:0;color:#1976d2}section{margin-top:22px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #d9e0e8;padding:8px;text-align:left;font-size:13px}.totals{margin-left:auto;width:330px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.grand{font-size:18px;font-weight:bold;border-top:2px solid #17202c}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.box{border:1px solid #d9e0e8;padding:12px;border-radius:8px}@media print{button{display:none}}</style></head><body><header><div><h1>TorqueFlow</h1><div class="muted">Orden de trabajo ${order.id}</div></div><div><strong>${escapeHTML(order.plate)}</strong><br>${escapeHTML(order.vehicle)}</div></header><section class="grid"><div class="box"><strong>Cliente</strong><br>${escapeHTML(order.client)}<br>${escapeHTML(order.phone || "")}</div><div class="box"><strong>Estado</strong><br>${statusConfig[order.status].label}<br>Mecánico: ${escapeHTML(order.mechanic)}</div></section><section><h3>Diagnóstico</h3><p>${escapeHTML(order.diagnosis)}</p><p><strong>Trabajo:</strong> ${escapeHTML(order.service)}</p></section><section><h3>Piezas y materiales</h3><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Costo unit.</th><th>Subtotal</th></tr></thead><tbody>${partsRows}</tbody></table></section><section><h3>Trabajos externos</h3><table><thead><tr><th>Tipo</th><th>Proveedor</th><th>Tiempo</th><th>Costo</th></tr></thead><tbody>${externalRows}</tbody></table></section><section class="totals"><div><span>Piezas</span><strong>${currencyWithDecimals(costs.parts)}</strong></div><div><span>Externos</span><strong>${currencyWithDecimals(costs.external)}</strong></div><div><span>Mano de obra</span><strong>${currencyWithDecimals(costs.labor)}</strong></div><div class="grand"><span>Costo total</span><strong>${currencyWithDecimals(costs.total)}</strong></div></section><script>window.onload=()=>window.print()<\/script></body></html>`);
+  popup.document.close();
+}
+
+function duplicateCurrentOrder() {
+  const draft = workOrdersState.editorDraft;
+  if (!draft) return;
+  const copy = deepClone(draft);
+  copy.id = getNextOrderNumber();
+  copy.status = "revision";
+  copy.enteredAt = new Date().toISOString();
+  copy.promisedAt = new Date(Date.now() + 24 * 3600000).toISOString();
+  copy.parts = [];
+  copy.externalWorks = [];
+  copy.laborCost = 0;
+  copy.otherCost = 0;
+  copy.discount = 0;
+  copy.currentCost = 0;
+  copy.workSeconds = 0;
+  copy.timerStartedAt = null;
+  copy.paymentStatus = "pending";
+  copy.history = [{ id: `H-${Date.now()}`, at: copy.enteredAt, type: "created", title: "Orden duplicada", detail: `Creada a partir de ${draft.id}.` }];
+  appData.orders.unshift(copy);
+  persistWorkOrders();
+  renderWorkOrdersModule();
+  renderMetrics();
+  closeOrderEditor();
+  showToast("Orden duplicada", `${copy.id} fue creada sin costos consumidos.`, "copy");
+}
+
+function initializeWorkOrdersModule() {
+  if (!UI.workOrdersView) return;
+  hydrateWorkOrders();
+  populateMechanicFilters();
+  renderWorkOrdersModule();
+
+  document.querySelector("#ordersCatalogSearch").addEventListener("input", debounce((event) => { workOrdersState.search = event.target.value; renderWorkOrdersModule(); }, 120));
+  [["#ordersStatusFilter", "status"], ["#ordersMechanicFilter", "mechanic"], ["#ordersPriorityFilter", "priority"], ["#ordersCostFilter", "cost"]].forEach(([selector, key]) => document.querySelector(selector).addEventListener("change", (event) => { workOrdersState.filters[key] = event.target.value; renderWorkOrdersModule(); }));
+  document.querySelector("#ordersSort").addEventListener("change", (event) => { workOrdersState.sort = event.target.value; renderWorkOrdersModule(); });
+  document.querySelector("#resetOrdersFilters").addEventListener("click", resetWorkOrderFilters);
+  document.querySelector("#emptyResetFilters").addEventListener("click", resetWorkOrderFilters);
+  document.querySelector("#selectAllVisibleOrders").addEventListener("change", (event) => { getFilteredWorkOrders().forEach((order) => event.target.checked ? workOrdersState.selected.add(order.id) : workOrdersState.selected.delete(order.id)); renderWorkOrdersModule(); });
+  document.querySelector("#clearOrderSelection").addEventListener("click", () => { workOrdersState.selected.clear(); renderWorkOrdersModule(); });
+  document.querySelector("#bulkStatus").addEventListener("change", (event) => { changeOrdersStatus([...workOrdersState.selected], event.target.value); event.target.value = ""; });
+  document.querySelector("#bulkMechanic").addEventListener("change", (event) => { const mechanic = event.target.value; if (!mechanic) return; workOrdersState.selected.forEach((id) => { const order = appData.orders.find((item) => item.id === id); if (order) { order.mechanic = mechanic; addOrderHistory(order, "assigned", "Mecánico reasignado", mechanic); } }); event.target.value = ""; persistWorkOrders(); renderWorkOrdersModule(); showToast("Mecánico asignado", `${workOrdersState.selected.size} órdenes fueron actualizadas.`, "user"); });
+  document.querySelector("#exportOrdersButton").addEventListener("click", () => downloadJSON(getFilteredWorkOrders(), "ordenes-de-trabajo.json"));
+  document.querySelector("#exportSelectedOrders").addEventListener("click", () => downloadJSON(appData.orders.filter((order) => workOrdersState.selected.has(order.id)), "ordenes-seleccionadas.json"));
+
+  document.querySelectorAll("[data-orders-view]").forEach((button) => button.addEventListener("click", () => { workOrdersState.viewMode = button.dataset.ordersView; renderWorkOrdersModule(); }));
+
+  UI.workOrdersView.addEventListener("click", (event) => {
+    const select = event.target.closest("[data-select-work-order]");
+    const opener = event.target.closest("[data-work-order-open]");
+    if (select) {
+      event.stopPropagation();
+      select.checked ? workOrdersState.selected.add(select.dataset.selectWorkOrder) : workOrdersState.selected.delete(select.dataset.selectWorkOrder);
+      renderWorkOrdersModule();
+      return;
+    }
+    if (opener && !event.target.closest("[data-order-select]")) openOrderEditor(opener.dataset.workOrderOpen);
+  });
+
+  UI.ordersKanban.addEventListener("dragstart", (event) => { const card = event.target.closest("[data-drag-order]"); if (!card) return; workOrdersState.draggedOrderId = card.dataset.dragOrder; card.classList.add("is-dragging"); event.dataTransfer.effectAllowed = "move"; });
+  UI.ordersKanban.addEventListener("dragend", (event) => { event.target.closest("[data-drag-order]")?.classList.remove("is-dragging"); document.querySelectorAll(".kanban-column.is-drag-over").forEach((column) => column.classList.remove("is-drag-over")); workOrdersState.draggedOrderId = null; });
+  UI.ordersKanban.addEventListener("dragover", (event) => { const column = event.target.closest("[data-drop-status]"); if (!column) return; event.preventDefault(); column.classList.add("is-drag-over"); });
+  UI.ordersKanban.addEventListener("dragleave", (event) => { const column = event.target.closest("[data-drop-status]"); if (column && !column.contains(event.relatedTarget)) column.classList.remove("is-drag-over"); });
+  UI.ordersKanban.addEventListener("drop", (event) => { const column = event.target.closest("[data-drop-status]"); if (!column || !workOrdersState.draggedOrderId) return; event.preventDefault(); changeOrdersStatus([workOrdersState.draggedOrderId], column.dataset.dropStatus); showToast("Estado actualizado", `La orden pasó a ${statusConfig[column.dataset.dropStatus].label}.`, "refresh"); });
+
+  document.querySelector("#closeOrderEditor").addEventListener("click", closeOrderEditor);
+  document.querySelector("#cancelOrderEditor").addEventListener("click", closeOrderEditor);
+  UI.orderEditorDialog.addEventListener("close", () => { window.clearInterval(workOrdersState.timerInterval); workOrdersState.timerInterval = null; });
+  document.querySelectorAll("[data-editor-tab]").forEach((button) => button.addEventListener("click", () => setEditorTab(button.dataset.editorTab)));
+  UI.orderEditorForm.addEventListener("input", (event) => { if (event.target.matches("#editorLaborCost, #editorOtherCost, #editorDiscount")) refreshEditorTotals(); markEditorDirty(); });
+  document.querySelector("#addPartToOrder").addEventListener("click", addPartToEditor);
+  document.querySelector("#editorPartsBody").addEventListener("change", (event) => { const id = event.target.dataset.partId; const field = event.target.dataset.partField; if (!id || !field) return; const part = workOrdersState.editorDraft.parts.find((item) => item.id === id); if (part) { part[field] = Math.max(0, Number(event.target.value) || 0); renderEditorParts(); markEditorDirty(); } });
+  document.querySelector("#editorPartsBody").addEventListener("click", (event) => { const button = event.target.closest("[data-remove-part]"); if (!button) return; workOrdersState.editorDraft.parts = workOrdersState.editorDraft.parts.filter((item) => item.id !== button.dataset.removePart); renderEditorParts(); markEditorDirty(); });
+  document.querySelector("#addExternalWork").addEventListener("click", addExternalWorkToEditor);
+  document.querySelector("#externalWorkList").addEventListener("click", (event) => { const button = event.target.closest("[data-remove-external]"); if (!button) return; workOrdersState.editorDraft.externalWorks = workOrdersState.editorDraft.externalWorks.filter((item) => item.id !== button.dataset.removeExternal); renderEditorExternalWorks(); markEditorDirty(); });
+  document.querySelector("#toggleWorkTimer").addEventListener("click", toggleEditorTimer);
+  document.querySelector("#resetWorkTimer").addEventListener("click", resetEditorTimer);
+  document.querySelector("#saveOrderChanges").addEventListener("click", saveEditorChanges);
+  document.querySelector("#exportOrderJsonButton").addEventListener("click", () => { syncEditorDraftFromFields(); exportOrder(workOrdersState.editorDraft); });
+  document.querySelector("#printOrderButton").addEventListener("click", () => { syncEditorDraftFromFields(); printOrder(workOrdersState.editorDraft); });
+  document.querySelector("#duplicateOrderButton").addEventListener("click", duplicateCurrentOrder);
+  document.querySelector("#editorWhatsAppButton").addEventListener("click", () => { const phone = String(workOrdersState.editorDraft?.phone || "").replace(/\D/g, ""); if (!phone) { showToast("Teléfono no disponible", "Registra el número del cliente antes de contactarlo.", "alert"); return; } window.open(`https://wa.me/51${phone}?text=${encodeURIComponent(`Hola ${workOrdersState.editorDraft.client}, te contactamos por la orden ${workOrdersState.editorDraft.id} de tu vehículo ${workOrdersState.editorDraft.plate}.`)}`, "_blank", "noopener,noreferrer"); });
+}
+
+
 function handleAction(action) {
+  if (action === "new-order") {
+    setActiveView("nueva-orden");
+    return;
+  }
   if (action === "add-part") {
     setActiveView("repuestos");
-    openMovementModal();
+    openMovementModal("", "entrada");
     return;
   }
   const actions = {
-    "new-order": ["Nueva orden", "La vista de ingreso se conectará en la siguiente entrega.", "plus"],
     "add-expense": ["Registro de gasto", "Este acceso alimentará los costos reales de cada orden.", "wallet"]
   };
   const payload = actions[action];
@@ -987,11 +2225,7 @@ function handleAction(action) {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  try {
-    localStorage.setItem("torqueflow-theme", theme);
-  } catch (error) {
-    console.warn("No se pudo guardar el tema.", error);
-  }
+  safeStorageSet("torqueflow-theme", theme);
   requestAnimationFrame(drawAllCharts);
 }
 
@@ -1022,14 +2256,59 @@ function bindEvents() {
   UI.themeToggle.addEventListener("click", toggleTheme);
   UI.globalSearch.addEventListener("input", handleGlobalSearch);
 
+  UI.serviceSearch?.addEventListener("input", renderServiceCatalog);
+  UI.newOrderForm?.addEventListener("input", (event) => {
+    if (event.target.id === "vehiclePlate" || event.target.id === "vehicleVin") event.target.value = event.target.value.toUpperCase();
+    if (event.target.matches("[data-service-price]")) {
+      const service = newOrderState.selectedServices.get(event.target.dataset.servicePrice);
+      if (service) service.price = Math.max(0, Number(event.target.value) || 0);
+    }
+    event.target.closest(".field")?.classList.remove("is-invalid");
+    updateOrderSummary();
+    markDraftDirty();
+  });
+  UI.newOrderForm?.addEventListener("change", (event) => {
+    if (event.target.id === "fuelLevel") document.querySelector("#fuelLevelText").textContent = `${event.target.value}%`;
+    updateOrderSummary();
+    markDraftDirty();
+  });
+  UI.newOrderForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    generateOrder();
+  });
+  document.querySelector("#clientName")?.addEventListener("change", handleClientLookup);
+  document.querySelector("#vehiclePhotos")?.addEventListener("change", (event) => {
+    handlePhotoSelection(event.target.files);
+    event.target.value = "";
+  });
+  document.querySelector("#saveDraftButton")?.addEventListener("click", saveNewOrderDraft);
+  document.querySelector("#previewJsonButton")?.addEventListener("click", previewOrderJson);
+  document.querySelector("#closeJsonDialog")?.addEventListener("click", () => UI.jsonPreviewDialog.close());
+  document.querySelector("#closeJsonDialogFooter")?.addEventListener("click", () => UI.jsonPreviewDialog.close());
+  document.querySelector("#confirmFromPreview")?.addEventListener("click", generateOrder);
+  document.querySelector("#createAnotherOrder")?.addEventListener("click", () => { UI.orderSuccessDialog.close(); resetNewOrderForm(); });
+  document.querySelector("#goToOrdersButton")?.addEventListener("click", () => { UI.orderSuccessDialog.close(); setActiveView("ordenes"); });
+  document.querySelector("#clearExistingClient")?.addEventListener("click", () => {
+    ["#clientName", "#clientDocument", "#clientPhone", "#clientEmail"].forEach((selector) => { document.querySelector(selector).value = ""; });
+    document.querySelector("#existingClientBanner").hidden = true;
+    document.querySelector("#clientName").focus();
+  });
+  document.querySelector("#openCustomService")?.addEventListener("click", () => { document.querySelector("#customServiceForm").hidden = false; document.querySelector("#customServiceName").focus(); });
+  document.querySelector("#closeCustomService")?.addEventListener("click", () => { document.querySelector("#customServiceForm").hidden = true; });
+  document.querySelector("#addCustomService")?.addEventListener("click", addCustomService);
+
   document.addEventListener("click", (event) => {
     const navLink = event.target.closest("[data-view]");
     const viewButton = event.target.closest("[data-view-target]");
     const actionButton = event.target.closest("[data-action]");
     const alertButton = event.target.closest("[data-dismiss-alert]");
     const orderButton = event.target.closest("[data-order-id], [data-search-order]");
-    const historySearchButton = event.target.closest("[data-search-history]");
-    const partSearchButton = event.target.closest("[data-search-part]");
+    const serviceButton = event.target.closest("[data-service-id]");
+    const categoryButton = event.target.closest("[data-service-category]");
+    const removeServiceButton = event.target.closest("[data-remove-service]");
+    const removePhotoButton = event.target.closest("[data-remove-photo]");
+    const symptomButton = event.target.closest("[data-symptom]");
+    const scrollButton = event.target.closest("[data-scroll-section]");
 
     if (navLink) {
       event.preventDefault();
@@ -1048,25 +2327,47 @@ function bindEvents() {
       dismissAlert(alertButton.dataset.dismissAlert);
     }
 
-    if (orderButton) {
+    if (orderButton && !event.target.closest("[data-order-select]")) {
       const orderId = orderButton.dataset.orderId || orderButton.dataset.searchOrder;
       const order = appData.orders.find((item) => item.id === orderId);
       UI.searchResults.hidden = true;
       if (order) {
-        showToast(`${order.id} · ${order.plate}`, `${order.client} — ${statusConfig[order.status].label}.`, "car");
+        setActiveView("ordenes");
+        openOrderEditor(orderId);
       }
     }
 
-    if (historySearchButton) {
-      UI.searchResults.hidden = true;
-      setActiveView("historial");
-      openHistoryDetail(historySearchButton.dataset.searchHistory);
+    if (serviceButton) toggleService(serviceButton.dataset.serviceId);
+
+    if (categoryButton) {
+      newOrderState.category = categoryButton.dataset.serviceCategory;
+      renderServiceCatalog();
     }
 
-    if (partSearchButton) {
-      UI.searchResults.hidden = true;
-      setActiveView("repuestos");
-      openPartEditor(partSearchButton.dataset.searchPart);
+    if (removeServiceButton) {
+      newOrderState.selectedServices.delete(removeServiceButton.dataset.removeService);
+      renderServiceCatalog();
+      renderSelectedServices();
+      markDraftDirty();
+    }
+
+    if (removePhotoButton) {
+      const index = Number(removePhotoButton.dataset.removePhoto);
+      const [removed] = newOrderState.photos.splice(index, 1);
+      if (removed) URL.revokeObjectURL(removed.url);
+      renderPhotoPreviews();
+      markDraftDirty();
+    }
+
+    if (symptomButton) {
+      const diagnosis = document.querySelector("#initialDiagnosis");
+      const prefix = diagnosis.value.trim() ? `${diagnosis.value.trim()} · ` : "";
+      diagnosis.value = `${prefix}${symptomButton.dataset.symptom}.`;
+      diagnosis.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    if (scrollButton) {
+      document.querySelector(`#${CSS.escape(scrollButton.dataset.scrollSection)}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     if (!event.target.closest(".global-search")) {
@@ -1085,7 +2386,7 @@ function bindEvents() {
 
     if (isNewOrderShortcut && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) {
       event.preventDefault();
-      handleAction("new-order");
+      setActiveView("nueva-orden");
     }
 
     if (event.key === "Escape") {
@@ -1096,7 +2397,6 @@ function bindEvents() {
 
   window.addEventListener("resize", debounce(drawAllCharts, 180));
 }
-
 
 /* =========================================================
    Historial de servicios
@@ -1128,7 +2428,7 @@ const stockStatusConfig = {
 
 function parseStoredArray(key, fallback) {
   try {
-    const stored = JSON.parse(localStorage.getItem(key));
+    const stored = JSON.parse(safeStorageGet(key));
     return Array.isArray(stored) ? stored : fallback;
   } catch (error) {
     console.warn(`No se pudo leer ${key}`, error);
@@ -1143,8 +2443,8 @@ function initializeInventoryStorage() {
 
 function persistInventory() {
   try {
-    localStorage.setItem("torqueflow-parts", JSON.stringify(appData.parts));
-    localStorage.setItem("torqueflow-stock-movements", JSON.stringify(appData.stockMovements));
+    safeStorageSet("torqueflow-parts", JSON.stringify(appData.parts));
+    safeStorageSet("torqueflow-stock-movements", JSON.stringify(appData.stockMovements));
   } catch (error) {
     console.warn("El almacenamiento local no está disponible.", error);
   }
@@ -1178,7 +2478,7 @@ function durationBetween(start, end) {
   return Math.max(0, new Date(end).getTime() - new Date(start).getTime());
 }
 
-function formatDuration(milliseconds) {
+function formatHistoryDuration(milliseconds) {
   if (!milliseconds || milliseconds < 60000) return "0 min";
   const totalMinutes = Math.round(milliseconds / 60000);
   const days = Math.floor(totalMinutes / 1440);
@@ -1269,7 +2569,7 @@ function renderHistoryMetrics(historyRows) {
     { label: "Servicios registrados", value: historyRows.length, helper: "Según filtros aplicados", icon: "history", color: "var(--primary)", soft: "var(--primary-soft)", delta: `${historyRows.filter((o) => o.status === "garantia").length} en garantía`, deltaType: "warning" },
     { label: "Facturación acumulada", value: formatCurrency(totalBilled), helper: "Importe cobrado y pendiente", icon: "wallet", color: "var(--green)", soft: "var(--green-soft)", delta: `${historyRows.filter((o) => o.paid).length} pagadas`, deltaType: "positive" },
     { label: "Utilidad real", value: formatCurrency(totalProfit), helper: "Cobro menos costos directos", icon: "trending", color: "var(--purple)", soft: "rgba(169, 120, 255, 0.14)", delta: totalBilled ? `${Math.round((totalProfit / totalBilled) * 100)}% margen` : "0% margen", deltaType: "positive" },
-    { label: "Tiempo promedio", value: formatDuration(averageDuration), helper: `${formatDuration(externalTime)} en externos`, icon: "clock", color: "var(--orange)", soft: "var(--orange-soft)", delta: "Tiempo total", deltaType: "warning" }
+    { label: "Tiempo promedio", value: formatHistoryDuration(averageDuration), helper: `${formatHistoryDuration(externalTime)} en externos`, icon: "clock", color: "var(--orange)", soft: "var(--orange-soft)", delta: "Tiempo total", deltaType: "warning" }
   ];
 
   document.querySelector("#historyMetrics").innerHTML = metrics.map((metric) => `
@@ -1301,8 +2601,8 @@ function renderHistoryTable(historyRows) {
         </td>
         <td><div class="vehicle-cell"><strong class="table-primary">${escapeHTML(order.plate)} · ${escapeHTML(order.vehicle)}</strong><span class="table-secondary">${escapeHTML(order.client)} · ${escapeHTML(order.mechanic)}</span></div></td>
         <td><div class="time-cell"><span><i></i>${formatDate(order.enteredAt, { time: true })}</span><span><i></i>${formatDate(order.deliveredAt || order.completedAt, { time: true })}</span></div></td>
-        <td><strong class="duration-value">${formatDuration(totalDuration)}</strong><span class="duration-note">Ingreso a salida</span></td>
-        <td><strong class="duration-value ${externalDuration ? "money-warning" : ""}">${formatDuration(externalDuration)}</strong><span class="duration-note">${order.externals.length ? `${order.externals.length} servicio(s)` : "Sin terceros"}</span></td>
+        <td><strong class="duration-value">${formatHistoryDuration(totalDuration)}</strong><span class="duration-note">Ingreso a salida</span></td>
+        <td><strong class="duration-value ${externalDuration ? "money-warning" : ""}">${formatHistoryDuration(externalDuration)}</strong><span class="duration-note">${order.externals.length ? `${order.externals.length} servicio(s)` : "Sin terceros"}</span></td>
         <td><strong class="table-primary">${formatCurrencyDetailed(financials.totalCost)}</strong><span class="table-secondary">Cobrado ${formatCurrencyDetailed(order.billed)}</span></td>
         <td><strong class="table-primary ${financials.profit >= 0 ? "money-positive" : "money-negative"}">${formatCurrencyDetailed(financials.profit)}</strong><span class="table-secondary">${Math.round(financials.margin)}% margen</span></td>
         <td><span class="history-status ${status.className}">${status.label}</span></td>
@@ -1387,7 +2687,7 @@ function openHistoryDetail(orderId) {
   const partsRows = order.parts.map((item) => `
     <div class="breakdown-row"><span>${item.qty} × ${escapeHTML(item.name)}<small class="table-secondary">Costo ${formatCurrencyDetailed(item.unitCost)} · Venta ${formatCurrencyDetailed(item.unitPrice)}</small></span><strong>${formatCurrencyDetailed(item.qty * item.unitPrice)}</strong></div>`).join("");
   const externalRows = order.externals.length ? order.externals.map((item) => `
-    <div class="breakdown-row"><span>${escapeHTML(item.service)}<small class="table-secondary">${escapeHTML(item.provider)} · ${formatDuration(durationBetween(item.start, item.end))}</small></span><strong>${formatCurrencyDetailed(item.charged)}</strong></div>`).join("") : '<div class="breakdown-row"><span>Sin trabajos externos</span><strong>S/ 0.00</strong></div>';
+    <div class="breakdown-row"><span>${escapeHTML(item.service)}<small class="table-secondary">${escapeHTML(item.provider)} · ${formatHistoryDuration(durationBetween(item.start, item.end))}</small></span><strong>${formatCurrencyDetailed(item.charged)}</strong></div>`).join("") : '<div class="breakdown-row"><span>Sin trabajos externos</span><strong>S/ 0.00</strong></div>';
   document.querySelector("#historyDetailTitle").textContent = `${order.id} · ${order.plate}`;
   document.querySelector("#historyDetailContent").innerHTML = `
     <div class="voucher">
@@ -1405,11 +2705,11 @@ function openHistoryDetail(orderId) {
         <div class="voucher-summary-card"><span>Costo real</span><strong>${formatCurrencyDetailed(financials.totalCost)}</strong></div>
         <div class="voucher-summary-card"><span>Total cobrado</span><strong>${formatCurrencyDetailed(order.billed)}</strong></div>
         <div class="voucher-summary-card"><span>Utilidad</span><strong class="${financials.profit >= 0 ? "money-positive" : "money-negative"}">${formatCurrencyDetailed(financials.profit)}</strong></div>
-        <div class="voucher-summary-card"><span>Tiempo total</span><strong>${formatDuration(totalDuration)}</strong></div>
+        <div class="voucher-summary-card"><span>Tiempo total</span><strong>${formatHistoryDuration(totalDuration)}</strong></div>
       </div>
       <div class="voucher-grid">
         <section class="voucher-section"><h3>Piezas y materiales cobrados</h3><div class="breakdown-list">${partsRows}<div class="breakdown-row"><span>Mano de obra</span><strong>${formatCurrencyDetailed(order.laborCharge)}</strong></div><div class="breakdown-row"><span>Otros cargos</span><strong>${formatCurrencyDetailed(order.otherCosts)}</strong></div><div class="breakdown-row"><span>Descuento</span><strong>− ${formatCurrencyDetailed(order.discount)}</strong></div><div class="breakdown-row is-total"><strong>Total facturado</strong><strong>${formatCurrencyDetailed(order.billed)}</strong></div></div></section>
-        <section class="voucher-section"><h3>Trabajos externos</h3><div class="breakdown-list">${externalRows}<div class="breakdown-row is-total"><strong>Tiempo perdido externo</strong><strong>${formatDuration(externalDuration)}</strong></div></div></section>
+        <section class="voucher-section"><h3>Trabajos externos</h3><div class="breakdown-list">${externalRows}<div class="breakdown-row is-total"><strong>Tiempo perdido externo</strong><strong>${formatHistoryDuration(externalDuration)}</strong></div></div></section>
         <section class="voucher-section"><h3>Costos internos y margen</h3><div class="breakdown-list"><div class="breakdown-row"><span>Costo de repuestos</span><strong>${formatCurrencyDetailed(financials.partsCost)}</strong></div><div class="breakdown-row"><span>Costo de mano de obra</span><strong>${formatCurrencyDetailed(order.laborCost)}</strong></div><div class="breakdown-row"><span>Costo externo</span><strong>${formatCurrencyDetailed(financials.externalCost)}</strong></div><div class="breakdown-row"><span>Otros costos</span><strong>${formatCurrencyDetailed(order.otherCosts)}</strong></div><div class="breakdown-row is-total"><strong>Margen real</strong><strong class="money-positive">${Math.round(financials.margin)}%</strong></div></div></section>
         <section class="voucher-section"><h3>Línea de tiempo</h3><div class="timeline-list">${order.timeline.map((item) => `<div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-content"><strong>${escapeHTML(item.label)}</strong><span>${formatDate(item.date, { time: true })}</span></div></div>`).join("")}</div></section>
       </div>
@@ -1435,7 +2735,7 @@ function historyToCsv(rows) {
   const header = ["Orden", "Placa", "Vehículo", "Cliente", "Mecánico", "Servicio", "Ingreso", "Salida", "Tiempo total", "Tiempo externo", "Costo", "Cobrado", "Utilidad", "Estado"];
   const data = rows.map((order) => {
     const finances = getHistoryFinancials(order);
-    return [order.id, order.plate, order.vehicle, order.client, order.mechanic, order.service, formatDate(order.enteredAt, { time: true }), formatDate(order.deliveredAt || order.completedAt, { time: true }), formatDuration(durationBetween(order.enteredAt, order.deliveredAt || order.completedAt)), formatDuration(getExternalDuration(order)), finances.totalCost.toFixed(2), order.billed.toFixed(2), finances.profit.toFixed(2), historyStatusConfig[order.status].label];
+    return [order.id, order.plate, order.vehicle, order.client, order.mechanic, order.service, formatDate(order.enteredAt, { time: true }), formatDate(order.deliveredAt || order.completedAt, { time: true }), formatHistoryDuration(durationBetween(order.enteredAt, order.deliveredAt || order.completedAt)), formatHistoryDuration(getExternalDuration(order)), finances.totalCost.toFixed(2), order.billed.toFixed(2), finances.profit.toFixed(2), historyStatusConfig[order.status].label];
   });
   return [header, ...data].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
 }
@@ -1888,7 +3188,19 @@ function bindHistoryPartsEvents() {
     const deleteButton = event.target.closest("[data-part-delete]");
     const restockButton = event.target.closest("[data-restock-part]");
     const closeButton = event.target.closest("[data-close-modal]");
+    const historySearchButton = event.target.closest("[data-search-history]");
+    const partSearchButton = event.target.closest("[data-search-part]");
 
+    if (historySearchButton) {
+      UI.searchResults.hidden = true;
+      setActiveView("historial");
+      openHistoryDetail(historySearchButton.dataset.searchHistory);
+    }
+    if (partSearchButton) {
+      UI.searchResults.hidden = true;
+      setActiveView("repuestos");
+      openPartEditor(partSearchButton.dataset.searchPart);
+    }
     if (detailButton) openHistoryDetail(detailButton.dataset.historyDetail);
     if (pageButton && !pageButton.disabled) {
       historyState.page = Number(pageButton.dataset.historyPage);
@@ -1907,7 +3219,7 @@ function bindHistoryPartsEvents() {
 function initializeTheme() {
   let savedTheme = null;
   try {
-    savedTheme = localStorage.getItem("torqueflow-theme");
+    savedTheme = safeStorageGet("torqueflow-theme");
   } catch (error) {
     console.warn("No se pudo leer el tema guardado.", error);
   }
@@ -1924,6 +3236,8 @@ function initializeApp() {
   renderActivity();
   renderGoal();
   renderFinanceSummary();
+  initializeNewOrderModule();
+  initializeWorkOrdersModule();
   bindEvents();
   bindHistoryPartsEvents();
   populateHistoryMechanics();
@@ -1931,9 +3245,13 @@ function initializeApp() {
   renderPartsModule();
   updateClock();
   window.setInterval(updateClock, 1000);
+
   const initialView = window.location.hash.replace("#", "");
-  if (["historial", "repuestos"].includes(initialView)) setActiveView(initialView);
-  else requestAnimationFrame(drawAllCharts);
+  if (["dashboard", "nueva-orden", "ordenes", "historial", "repuestos", "clientes", "configuracion"].includes(initialView)) {
+    setActiveView(initialView);
+  } else {
+    setActiveView("dashboard");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initializeApp);
