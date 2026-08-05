@@ -584,6 +584,8 @@ const UI = {
   dashboardView: document.querySelector("#dashboardView"),
   historyView: document.querySelector("#historyView"),
   partsView: document.querySelector("#partsView"),
+  clientsView: document.querySelector("#clientsView"),
+  settingsView: document.querySelector("#settingsView"),
   placeholderView: document.querySelector("#placeholderView"),
   placeholderTitle: document.querySelector("#placeholderTitle"),
   placeholderText: document.querySelector("#placeholderText"),
@@ -1015,7 +1017,9 @@ function setActiveView(viewName) {
   const isWorkOrders = validView === "ordenes";
   const isHistory = validView === "historial";
   const isParts = validView === "repuestos";
-  const isPlaceholder = ["clientes", "configuracion"].includes(validView);
+  const isClients = validView === "clientes";
+  const isSettings = validView === "configuracion";
+  const isPlaceholder = false;
 
   document.querySelectorAll(".nav-item[data-view]").forEach((link) => {
     const isActive = link.dataset.view === validView;
@@ -1029,6 +1033,8 @@ function setActiveView(viewName) {
   UI.workOrdersView.hidden = !isWorkOrders;
   UI.historyView.hidden = !isHistory;
   UI.partsView.hidden = !isParts;
+  UI.clientsView.hidden = !isClients;
+  UI.settingsView.hidden = !isSettings;
   UI.placeholderView.hidden = !isPlaceholder;
 
   if (isNewOrder) {
@@ -1040,6 +1046,10 @@ function setActiveView(viewName) {
     renderHistoryModule();
   } else if (isParts) {
     renderPartsModule();
+  } else if (isClients) {
+    renderClientsModule();
+  } else if (isSettings) {
+    renderSettingsModule();
   } else if (isPlaceholder) {
     const copy = viewCopy[validView] || { title: "Módulo preparado", text: "Esta vista será conectada en una siguiente etapa." };
     UI.placeholderTitle.textContent = copy.title;
@@ -3229,6 +3239,7 @@ function initializeTheme() {
 
 function initializeApp() {
   initializeInventoryStorage();
+  initializeClientsSettingsStorage();
   initializeTheme();
   renderMetrics();
   renderPriorityOrders();
@@ -3240,6 +3251,7 @@ function initializeApp() {
   initializeWorkOrdersModule();
   bindEvents();
   bindHistoryPartsEvents();
+  bindClientsSettingsEvents();
   populateHistoryMechanics();
   populatePartsFilters();
   renderPartsModule();
@@ -3255,3 +3267,807 @@ function initializeApp() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeApp);
+
+/* =========================================================
+   MÓDULOS: CLIENTES Y CONFIGURACIÓN
+   ========================================================= */
+const CLIENTS_STORAGE_KEY = "torqueflow-clients-v1";
+const SETTINGS_STORAGE_KEY = "torqueflow-settings-v1";
+
+const clientsSeed = [
+  {
+    id: "CLI-001", type: "persona", name: "Carlos Mendoza", document: "43125874", phone: "987 221 410", email: "carlos.mendoza@email.com",
+    address: "Urb. Santa Victoria 248", district: "Chiclayo", birthday: "1985-04-18", source: "Recomendación", status: "active", segment: "vip",
+    joinedAt: "2024-02-15", lastVisit: "2026-07-31", totalSpent: 12640, pendingBalance: 350, creditLimit: 1500, visits: 11,
+    marketingConsent: true, creditEnabled: true, tags: ["pickup", "empresa familiar"], notes: "Prefiere contacto por WhatsApp. Autoriza trabajos adicionales hasta S/ 150.",
+    vehicles: [
+      { id: "VEH-001", plate: "M4R-921", brand: "Toyota", model: "Hilux", year: 2021, color: "Plata", fuel: "Diésel", mileage: 89740, vin: "8AJBA3CD0M1234567", nextService: "2026-09-10", notes: "Uso mixto ciudad/campo." },
+      { id: "VEH-002", plate: "K8P-402", brand: "Toyota", model: "Yaris", year: 2018, color: "Blanco", fuel: "Gasolina", mileage: 62210, vin: "", nextService: "2026-10-05", notes: "Vehículo familiar." }
+    ]
+  },
+  {
+    id: "CLI-002", type: "persona", name: "María Torres", document: "45896127", phone: "965 348 201", email: "maria.torres@email.com",
+    address: "Calle Los Álamos 511", district: "La Victoria", birthday: "1991-11-02", source: "Google", status: "active", segment: "frecuente",
+    joinedAt: "2024-08-03", lastVisit: "2026-07-31", totalSpent: 6840, pendingBalance: 0, creditLimit: 600, visits: 7,
+    marketingConsent: true, creditEnabled: false, tags: ["particular"], notes: "Solicita cotización antes de reemplazar piezas.",
+    vehicles: [{ id: "VEH-003", plate: "T8D-447", brand: "Hyundai", model: "Accent", year: 2018, color: "Rojo", fuel: "GLP", mileage: 118250, vin: "", nextService: "2026-08-22", notes: "Sistema GLP de quinta generación." }]
+  },
+  {
+    id: "CLI-003", type: "persona", name: "Andrea Salazar", document: "70254863", phone: "944 522 716", email: "andrea.salazar@email.com",
+    address: "Av. Grau 1320", district: "Chiclayo", birthday: "1994-06-23", source: "Instagram", status: "active", segment: "nuevo",
+    joinedAt: "2026-06-12", lastVisit: "2026-07-31", totalSpent: 920, pendingBalance: 0, creditLimit: 0, visits: 2,
+    marketingConsent: true, creditEnabled: false, tags: ["SUV"], notes: "Primer mantenimiento mayor pendiente.",
+    vehicles: [{ id: "VEH-004", plate: "B6P-038", brand: "Kia", model: "Sportage", year: 2020, color: "Negro", fuel: "Gasolina", mileage: 58440, vin: "", nextService: "2026-09-01", notes: "" }]
+  },
+  {
+    id: "CLI-004", type: "empresa", name: "Transportes Norte S.A.C.", document: "20608745123", phone: "979 310 662", email: "operaciones@transportesnorte.pe",
+    address: "Parque Industrial Mz. D Lt. 8", district: "Pimentel", birthday: "", source: "Empresa / convenio", status: "active", segment: "vip",
+    joinedAt: "2023-09-18", lastVisit: "2026-07-29", totalSpent: 28760, pendingBalance: 2450, creditLimit: 5000, visits: 24,
+    marketingConsent: true, creditEnabled: true, tags: ["flota", "facturación mensual"], notes: "Cierre de cuenta cada fin de mes. Contacto: Jorge Vásquez, jefe de operaciones.",
+    vehicles: [
+      { id: "VEH-005", plate: "A5H-812", brand: "Hino", model: "Dutro", year: 2020, color: "Blanco", fuel: "Diésel", mileage: 168900, vin: "", nextService: "2026-08-12", notes: "Unidad 04." },
+      { id: "VEH-006", plate: "F9C-330", brand: "Hyundai", model: "HD78", year: 2019, color: "Blanco", fuel: "Diésel", mileage: 204500, vin: "", nextService: "2026-08-07", notes: "Unidad 02; servicio nocturno preferido." },
+      { id: "VEH-007", plate: "V2L-901", brand: "JAC", model: "HFC", year: 2021, color: "Azul", fuel: "Diésel", mileage: 132700, vin: "", nextService: "2026-09-15", notes: "Unidad 06." }
+    ]
+  },
+  {
+    id: "CLI-005", type: "persona", name: "Pablo Ríos", document: "41673092", phone: "975 631 089", email: "",
+    address: "Urb. Monterrico II", district: "Chiclayo", birthday: "1982-09-14", source: "Recomendación", status: "active", segment: "frecuente",
+    joinedAt: "2025-01-22", lastVisit: "2026-07-30", totalSpent: 3580, pendingBalance: 0, creditLimit: 0, visits: 6,
+    marketingConsent: false, creditEnabled: false, tags: ["mantenimiento preventivo"], notes: "Entrega el vehículo por la mañana y recoge después de las 18:00.",
+    vehicles: [{ id: "VEH-008", plate: "C2X-710", brand: "Nissan", model: "Versa", year: 2019, color: "Gris", fuel: "GNV", mileage: 95420, vin: "", nextService: "2026-11-01", notes: "" }]
+  },
+  {
+    id: "CLI-006", type: "persona", name: "Rosa Delgado", document: "27834561", phone: "986 777 120", email: "rosa.delgado@email.com",
+    address: "José Leonardo Ortiz", district: "José Leonardo Ortiz", birthday: "1973-03-09", source: "Facebook", status: "active", segment: "frecuente",
+    joinedAt: "2024-11-11", lastVisit: "2026-07-31", totalSpent: 4210, pendingBalance: 180, creditLimit: 300, visits: 8,
+    marketingConsent: true, creditEnabled: true, tags: ["eléctrico"], notes: "Confirmar por llamada cuando el vehículo esté listo.",
+    vehicles: [{ id: "VEH-009", plate: "A7K-526", brand: "Chevrolet", model: "Sail", year: 2017, color: "Azul", fuel: "Gasolina", mileage: 143820, vin: "", nextService: "2026-08-18", notes: "Radio no original." }]
+  },
+  {
+    id: "CLI-007", type: "persona", name: "Daniel Campos", document: "73692015", phone: "958 220 345", email: "daniel.campos@email.com",
+    address: "Urb. Los Parques", district: "La Victoria", birthday: "1996-12-20", source: "Instagram", status: "active", segment: "nuevo",
+    joinedAt: "2026-04-05", lastVisit: "2026-07-30", totalSpent: 1480, pendingBalance: 0, creditLimit: 0, visits: 3,
+    marketingConsent: true, creditEnabled: false, tags: ["hatchback"], notes: "",
+    vehicles: [{ id: "VEH-010", plate: "Q9M-183", brand: "Suzuki", model: "Swift", year: 2022, color: "Amarillo", fuel: "Gasolina", mileage: 37200, vin: "", nextService: "2026-09-25", notes: "" }]
+  },
+  {
+    id: "CLI-008", type: "persona", name: "Sofía Cabrera", document: "69014328", phone: "912 745 991", email: "sofia.cabrera@email.com",
+    address: "Urb. El Ingeniero", district: "Pimentel", birthday: "1988-08-01", source: "Google", status: "active", segment: "vip",
+    joinedAt: "2023-06-27", lastVisit: "2026-07-30", totalSpent: 9420, pendingBalance: 0, creditLimit: 1200, visits: 12,
+    marketingConsent: true, creditEnabled: true, tags: ["SUV", "tarjeta"], notes: "Solicita factura electrónica.",
+    vehicles: [{ id: "VEH-011", plate: "F1A-309", brand: "Volkswagen", model: "Tiguan", year: 2020, color: "Plata", fuel: "Gasolina", mileage: 70400, vin: "", nextService: "2026-10-16", notes: "" }]
+  },
+  {
+    id: "CLI-009", type: "persona", name: "Luis Fernández", document: "40852197", phone: "933 854 110", email: "",
+    address: "Cercado de Chiclayo", district: "Chiclayo", birthday: "1980-01-26", source: "Tránsito", status: "inactive", segment: "inactivo",
+    joinedAt: "2023-10-02", lastVisit: "2025-12-15", totalSpent: 1760, pendingBalance: 0, creditLimit: 0, visits: 3,
+    marketingConsent: true, creditEnabled: false, tags: ["reactivación"], notes: "No visita el taller hace más de seis meses.",
+    vehicles: [{ id: "VEH-012", plate: "D8R-299", brand: "Renault", model: "Logan", year: 2016, color: "Blanco", fuel: "GLP", mileage: 177300, vin: "", nextService: "2026-01-15", notes: "" }]
+  }
+];
+
+const settingsSeed = {
+  business: { workshopName: "TorqueFlow Taller", legalName: "Servicios Automotrices TorqueFlow S.A.C.", ruc: "20612345678", phone: "074 620 480", whatsapp: "987 654 321", email: "atencion@torqueflow.pe", address: "Av. Miguel Grau 1240", district: "Chiclayo", timezone: "America/Lima", theme: "dark", accent: "#2f8cff", density: "comfortable" },
+  operations: { orderPrefix: "OT", nextOrder: 1049, deliveryHours: "24", budgetThreshold: 85, requirePhotos: true, requireApproval: true, preventNegativeStock: true, autoClose: true, startAlert: "60", externalAlert: "8", warrantyAlert: 7, fuelSteps: "4" },
+  services: { laborHour: 65, diagnosticMinimum: 80, diagnosticMinutes: 45, defaultWarranty: 90, categories: [
+    { id: "mantenimiento", name: "Mantenimiento", active: true, margin: 35 }, { id: "motor", name: "Motor", active: true, margin: 40 },
+    { id: "frenos", name: "Frenos", active: true, margin: 35 }, { id: "suspension", name: "Suspensión", active: true, margin: 35 },
+    { id: "direccion", name: "Dirección", active: true, margin: 35 }, { id: "transmision", name: "Transmisión", active: true, margin: 40 },
+    { id: "electrico", name: "Eléctrico", active: true, margin: 45 }, { id: "refrigeracion", name: "Refrigeración", active: true, margin: 35 },
+    { id: "climatizacion", name: "Climatización", active: true, margin: 40 }
+  ] },
+  finance: { taxEnabled: true, currency: "PEN", taxRate: 18, partsMargin: 35, externalMargin: 25, defaultCredit: 0, lowStock: 3, payments: [
+    { id: "cash", name: "Efectivo", active: true }, { id: "yape", name: "Yape / Plin", active: true }, { id: "transfer", name: "Transferencia", active: true }, { id: "card", name: "Tarjeta", active: true }, { id: "credit", name: "Crédito", active: true }
+  ] },
+  notifications: { whatsappEnabled: true, emailEnabled: true, notifyCreated: true, notifyApproval: true, notifyStatus: false, notifyReady: true, notifyStock: true, notifyOverdue: true,
+    templateCreated: "Hola {cliente}, recibimos tu vehículo {placa}. Tu orden es {orden}.",
+    templateApproval: "Hola {cliente}, el presupuesto de la orden {orden} es {total}. Responde APROBAR para continuar.",
+    templateReady: "Hola {cliente}, tu vehículo {placa} ya está listo. Puedes recogerlo en nuestro horario habitual." },
+  documents: { logo: true, diagnosis: true, internalCosts: false, signature: true, header: "ORDEN DE TRABAJO Y AUTORIZACIÓN", footer: "Gracias por confiar en TorqueFlow Taller.", terms: "El cliente autoriza el diagnóstico y los trabajos aprobados. Los repuestos sustituidos se entregan a solicitud. La garantía cubre únicamente el servicio realizado y no daños derivados de componentes ajenos." },
+  security: { autosave: true, auditLog: true, automaticBackup: true, deleteConfirmation: true, sessionTimeout: "30", backupFrequency: "weekly", lastBackup: null },
+  users: [
+    { id: "USR-001", name: "Leonardo Acuña", email: "admin@torqueflow.pe", phone: "", role: "Administrador", status: "active", permission: "full", lastAccess: "2026-08-04T20:32:00-05:00" },
+    { id: "USR-002", name: "Carla Vásquez", email: "recepcion@torqueflow.pe", phone: "", role: "Recepción", status: "active", permission: "operations", lastAccess: "2026-08-04T18:15:00-05:00" },
+    { id: "USR-003", name: "Marco Díaz", email: "almacen@torqueflow.pe", phone: "", role: "Almacén", status: "active", permission: "inventory", lastAccess: "2026-08-04T16:40:00-05:00" }
+  ],
+  mechanics: [
+    { id: "MEC-001", name: "José Ramírez", email: "", phone: "987 100 201", role: "Motor y diagnóstico", status: "active", permission: "operations", activeOrders: 3, efficiency: 92 },
+    { id: "MEC-002", name: "Luis Pérez", email: "", phone: "987 100 202", role: "Transmisión y electricidad", status: "active", permission: "operations", activeOrders: 2, efficiency: 88 },
+    { id: "MEC-003", name: "Miguel Rojas", email: "", phone: "987 100 203", role: "Suspensión y frenos", status: "active", permission: "operations", activeOrders: 2, efficiency: 90 }
+  ]
+};
+
+const clientsState = { view: "table", search: "", filters: { type: "all", segment: "all", balance: "all", service: "all" }, sort: "recent", profileId: null, profileTab: "overview" };
+let clientsData = [];
+let settingsData = null;
+let settingsDirty = false;
+
+function deepClone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function initializeClientsSettingsStorage() {
+  try {
+    const storedClients = safeStorageGet(CLIENTS_STORAGE_KEY);
+    const storedSettings = safeStorageGet(SETTINGS_STORAGE_KEY);
+    clientsData = storedClients ? JSON.parse(storedClients) : deepClone(clientsSeed);
+    settingsData = storedSettings ? JSON.parse(storedSettings) : deepClone(settingsSeed);
+  } catch (error) {
+    console.warn("No se pudo restaurar clientes o configuración.", error);
+    clientsData = deepClone(clientsSeed);
+    settingsData = deepClone(settingsSeed);
+  }
+  syncClientsWithOrders();
+}
+
+function persistClients() {
+  safeStorageSet(CLIENTS_STORAGE_KEY, JSON.stringify(clientsData));
+}
+
+function persistSettings() {
+  safeStorageSet(SETTINGS_STORAGE_KEY, JSON.stringify(settingsData));
+}
+
+function syncClientsWithOrders() {
+  [...appData.orders, ...appData.history].forEach((order) => {
+    if (!order.client) return;
+    let client = clientsData.find((item) => item.name.toLowerCase() === order.client.toLowerCase() || item.phone === order.phone);
+    if (!client) {
+      client = {
+        id: `CLI-${String(clientsData.length + 1).padStart(3, "0")}`, type: "persona", name: order.client, document: "", phone: order.phone || "", email: "", address: "", district: "Chiclayo", birthday: "", source: "Orden registrada", status: "active", segment: "nuevo",
+        joinedAt: (order.enteredAt || new Date().toISOString()).slice(0, 10), lastVisit: (order.enteredAt || new Date().toISOString()).slice(0, 10), totalSpent: 0, pendingBalance: 0, creditLimit: 0, visits: 1, marketingConsent: false, creditEnabled: false, tags: [], notes: "", vehicles: []
+      };
+      clientsData.push(client);
+    }
+    if (order.plate && !client.vehicles.some((vehicle) => vehicle.plate === order.plate)) {
+      const [brand = "", ...modelParts] = String(order.vehicle || "").split(" ");
+      const yearMatch = String(order.vehicle || "").match(/\b(19|20)\d{2}\b/);
+      client.vehicles.push({ id: `VEH-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`, plate: order.plate, brand, model: modelParts.filter((part) => !/^\d{4}$/.test(part)).join(" "), year: yearMatch ? Number(yearMatch[0]) : "", color: "", fuel: "Gasolina", mileage: 0, vin: "", nextService: "", notes: "" });
+    }
+  });
+}
+
+function clientInitials(name = "") {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "CL";
+}
+
+function getClientOrders(client) {
+  return [...appData.orders, ...appData.history]
+    .filter((order) => order.client === client.name || (client.phone && order.phone === client.phone))
+    .sort((a, b) => new Date(b.enteredAt || b.deliveredAt || 0) - new Date(a.enteredAt || a.deliveredAt || 0));
+}
+
+function getClientNextServiceState(client) {
+  const dates = client.vehicles.map((vehicle) => vehicle.nextService).filter(Boolean).sort();
+  if (!dates.length) return { key: "none", date: null, label: "Sin programación" };
+  const date = new Date(`${dates[0]}T12:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.ceil((date - today) / 86400000);
+  if (days < 0) return { key: "due", date: dates[0], label: `Vencido hace ${Math.abs(days)} días` };
+  if (days <= 30) return { key: "soon", date: dates[0], label: days === 0 ? "Hoy" : `En ${days} días` };
+  return { key: "scheduled", date: dates[0], label: formatDate(dates[0], { day: "2-digit", month: "short" }) };
+}
+
+function getFilteredClients() {
+  const query = clientsState.search.toLowerCase();
+  const result = clientsData.filter((client) => {
+    const haystack = [client.name, client.document, client.phone, client.email, client.district, ...(client.tags || []), ...(client.vehicles || []).flatMap((vehicle) => [vehicle.plate, vehicle.brand, vehicle.model])].join(" ").toLowerCase();
+    const serviceState = getClientNextServiceState(client).key;
+    const balanceMatch = clientsState.filters.balance === "all" ||
+      (clientsState.filters.balance === "debt" && client.pendingBalance > 0) ||
+      (clientsState.filters.balance === "clear" && client.pendingBalance <= 0) ||
+      (clientsState.filters.balance === "credit" && client.creditEnabled);
+    return (!query || haystack.includes(query)) &&
+      (clientsState.filters.type === "all" || client.type === clientsState.filters.type) &&
+      (clientsState.filters.segment === "all" || client.segment === clientsState.filters.segment) &&
+      balanceMatch &&
+      (clientsState.filters.service === "all" || serviceState === clientsState.filters.service);
+  });
+  const sorters = {
+    recent: (a, b) => new Date(b.lastVisit || 0) - new Date(a.lastVisit || 0),
+    spent: (a, b) => b.totalSpent - a.totalSpent,
+    visits: (a, b) => b.visits - a.visits,
+    name: (a, b) => a.name.localeCompare(b.name, "es"),
+    balance: (a, b) => b.pendingBalance - a.pendingBalance
+  };
+  return result.sort(sorters[clientsState.sort] || sorters.recent);
+}
+
+function clientSegmentPill(segment) {
+  const map = { vip: ["VIP", "success"], frecuente: ["Frecuente", "info"], nuevo: ["Nuevo", "warning"], inactivo: ["Inactivo", "neutral"] };
+  const [label, type] = map[segment] || [segment, "neutral"];
+  return `<span class="pill pill--${type}">${escapeHTML(label)}</span>`;
+}
+
+function renderClientsMetrics() {
+  const active = clientsData.filter((client) => client.status === "active").length;
+  const value = clientsData.reduce((sum, client) => sum + Number(client.totalSpent || 0), 0);
+  const debt = clientsData.reduce((sum, client) => sum + Number(client.pendingBalance || 0), 0);
+  const due = clientsData.filter((client) => ["due", "soon"].includes(getClientNextServiceState(client).key)).length;
+  document.querySelector("#clientsMetrics").innerHTML = [
+    { icon: "users", label: "Clientes activos", value: active, note: `${clientsData.length} registrados`, tone: "info" },
+    { icon: "wallet", label: "Facturación acumulada", value: formatCurrency(value), note: "Valor histórico", tone: "success" },
+    { icon: "alert", label: "Saldo pendiente", value: formatCurrency(debt), note: `${clientsData.filter((client) => client.pendingBalance > 0).length} cuentas`, tone: debt ? "warning" : "success" },
+    { icon: "calendar", label: "Mantenimientos próximos", value: due, note: "Vencidos o 30 días", tone: "warning" }
+  ].map((metric) => `<article class="module-metric module-metric--${metric.tone}"><span><svg><use href="#icon-${metric.icon}"></use></svg></span><div><small>${metric.label}</small><strong>${metric.value}</strong><p>${metric.note}</p></div></article>`).join("");
+}
+
+function renderClientsTable(clients) {
+  const body = document.querySelector("#clientsTableBody");
+  const empty = document.querySelector("#clientsEmpty");
+  body.innerHTML = clients.map((client) => {
+    const vehicles = client.vehicles || [];
+    return `<tr>
+      <td><div class="client-list-identity"><span class="client-avatar">${clientInitials(client.name)}</span><div><strong>${escapeHTML(client.name)}</strong><small>${escapeHTML(client.document || "Sin documento")} · ${client.type === "empresa" ? "Empresa" : "Persona"}</small></div></div></td>
+      <td class="client-contact-cell"><span>${escapeHTML(client.phone || "—")}</span><span>${escapeHTML(client.email || "Sin correo")}</span></td>
+      <td><strong>${vehicles.length}</strong><small>${vehicles.slice(0, 2).map((vehicle) => escapeHTML(vehicle.plate)).join(" · ") || "Sin vehículo"}</small></td>
+      <td>${client.lastVisit ? formatDate(client.lastVisit, { day: "2-digit", month: "short", year: "numeric" }) : "—"}<small>${client.visits} visitas</small></td>
+      <td><strong>${formatCurrency(client.totalSpent || 0)}</strong></td>
+      <td class="${client.pendingBalance > 0 ? "client-balance--danger" : "client-balance--clear"}">${client.pendingBalance > 0 ? formatCurrency(client.pendingBalance) : "Al día"}</td>
+      <td>${clientSegmentPill(client.segment)}</td>
+      <td><div class="client-row-actions"><button class="icon-button" type="button" data-client-profile="${client.id}" aria-label="Ver ficha"><svg><use href="#icon-eye"></use></svg></button><button class="icon-button" type="button" data-client-edit="${client.id}" aria-label="Editar"><svg><use href="#icon-edit"></use></svg></button></div></td>
+    </tr>`;
+  }).join("");
+  empty.hidden = clients.length > 0;
+  document.querySelector("#clientsTableSummary").textContent = `${clients.length} registros`;
+}
+
+function renderClientsCards(clients) {
+  const grid = document.querySelector("#clientsCardGrid");
+  grid.innerHTML = clients.map((client) => {
+    const next = getClientNextServiceState(client);
+    return `<article class="client-card">
+      <div class="client-card__header"><div class="client-card__identity"><span class="client-avatar">${clientInitials(client.name)}</span><div><strong>${escapeHTML(client.name)}</strong><small>${escapeHTML(client.document || "Sin documento")}</small></div></div>${clientSegmentPill(client.segment)}</div>
+      <div class="client-card__vehicles">${(client.vehicles || []).slice(0, 3).map((vehicle) => `<span class="client-vehicle-chip"><svg><use href="#icon-car"></use></svg>${escapeHTML(vehicle.plate)}</span>`).join("") || '<span class="client-tag">Sin vehículos</span>'}</div>
+      <div class="client-card__meta"><div><span>Facturación</span><strong>${formatCurrency(client.totalSpent || 0)}</strong></div><div><span>Saldo</span><strong class="${client.pendingBalance > 0 ? "client-balance--danger" : "client-balance--clear"}">${client.pendingBalance > 0 ? formatCurrency(client.pendingBalance) : "Al día"}</strong></div><div><span>Visitas</span><strong>${client.visits}</strong></div><div><span>Próximo servicio</span><strong>${escapeHTML(next.label)}</strong></div></div>
+      <div class="client-card__footer"><div><small>${escapeHTML(client.phone || "Sin teléfono")}</small><strong>${escapeHTML(client.district || "Sin distrito")}</strong></div><div class="client-row-actions"><button class="button button--ghost button--small" type="button" data-client-profile="${client.id}">Ver ficha</button><button class="icon-button" type="button" data-client-edit="${client.id}" aria-label="Editar"><svg><use href="#icon-edit"></use></svg></button></div></div>
+    </article>`;
+  }).join("");
+}
+
+function renderClientSidePanels() {
+  const reminders = clientsData.map((client) => ({ client, service: getClientNextServiceState(client) })).filter((item) => ["due", "soon"].includes(item.service.key)).sort((a, b) => new Date(a.service.date) - new Date(b.service.date)).slice(0, 5);
+  document.querySelector("#clientReminderCount").textContent = reminders.length;
+  document.querySelector("#clientReminderList").innerHTML = reminders.length ? reminders.map(({ client, service }) => `<button class="client-reminder-item text-button" type="button" data-client-profile="${client.id}"><span><svg><use href="#icon-calendar"></use></svg></span><div><strong>${escapeHTML(client.name)}</strong><small>${escapeHTML((client.vehicles[0] || {}).plate || "Sin placa")}</small></div><time>${escapeHTML(service.label)}</time></button>`).join("") : '<div class="empty-inline">No hay recordatorios pendientes.</div>';
+  const ranking = [...clientsData].sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
+  document.querySelector("#clientRankingList").innerHTML = ranking.map((client, index) => `<button class="client-ranking-item text-button" type="button" data-client-profile="${client.id}"><span>${index + 1}</span><div><strong>${escapeHTML(client.name)}</strong><small>${client.visits} visitas</small></div><strong>${formatCurrency(client.totalSpent)}</strong></button>`).join("");
+  const inactive = clientsData.filter((client) => client.segment === "inactivo" || (client.lastVisit && Date.now() - new Date(client.lastVisit).getTime() > 15552000000));
+  document.querySelector("#clientOpportunityTitle").textContent = inactive.length ? `Recupera ${inactive.length} cliente${inactive.length === 1 ? "" : "s"}` : "Premia a tus clientes frecuentes";
+  document.querySelector("#clientOpportunityText").textContent = inactive.length ? "Tienen más de seis meses sin volver al taller." : "Crea una campaña de mantenimiento preventivo.";
+}
+
+function renderClientsModule() {
+  if (!clientsData.length) initializeClientsSettingsStorage();
+  const clients = getFilteredClients();
+  renderClientsMetrics();
+  renderClientsTable(clients);
+  renderClientsCards(clients);
+  renderClientSidePanels();
+  document.querySelector("#clientsTablePanel").hidden = clientsState.view !== "table";
+  document.querySelector("#clientsCardGrid").hidden = clientsState.view !== "cards";
+  document.querySelector("#clientsTableViewButton").classList.toggle("is-active", clientsState.view === "table");
+  document.querySelector("#clientsCardViewButton").classList.toggle("is-active", clientsState.view === "cards");
+  document.querySelector("#clientsResultCount").textContent = `${clients.length} cliente${clients.length === 1 ? "" : "s"}`;
+}
+
+function openClientEditor(clientId = null) {
+  const client = clientId ? clientsData.find((item) => item.id === clientId) : null;
+  document.querySelector("#clientEditorTitle").textContent = client ? "Editar cliente" : "Nuevo cliente";
+  document.querySelector("#clientEditorId").value = client?.id || "";
+  document.querySelector("#clientEditorType").value = client?.type || "persona";
+  document.querySelector("#clientEditorSegment").value = client?.segment || "nuevo";
+  document.querySelector("#clientEditorName").value = client?.name || "";
+  document.querySelector("#clientEditorDocument").value = client?.document || "";
+  document.querySelector("#clientEditorPhone").value = client?.phone || "";
+  document.querySelector("#clientEditorEmail").value = client?.email || "";
+  document.querySelector("#clientEditorBirthday").value = client?.birthday || "";
+  document.querySelector("#clientEditorAddress").value = client?.address || "";
+  document.querySelector("#clientEditorDistrict").value = client?.district || "Chiclayo";
+  document.querySelector("#clientEditorSource").value = client?.source || "Recomendación";
+  document.querySelector("#clientEditorCreditLimit").value = client?.creditLimit || 0;
+  document.querySelector("#clientEditorStatus").value = client?.status || "active";
+  document.querySelector("#clientEditorMarketing").checked = Boolean(client?.marketingConsent);
+  document.querySelector("#clientEditorCreditEnabled").checked = Boolean(client?.creditEnabled);
+  document.querySelector("#clientEditorTags").value = (client?.tags || []).join(", ");
+  document.querySelector("#clientEditorNotes").value = client?.notes || "";
+  openModal("clientEditorModal");
+  setTimeout(() => document.querySelector("#clientEditorName").focus(), 50);
+}
+
+function saveClientFromEditor() {
+  const form = document.querySelector("#clientEditorForm");
+  if (!form.reportValidity()) return;
+  const id = document.querySelector("#clientEditorId").value;
+  const payload = {
+    type: document.querySelector("#clientEditorType").value,
+    segment: document.querySelector("#clientEditorSegment").value,
+    name: document.querySelector("#clientEditorName").value.trim(),
+    document: document.querySelector("#clientEditorDocument").value.trim(),
+    phone: document.querySelector("#clientEditorPhone").value.trim(),
+    email: document.querySelector("#clientEditorEmail").value.trim(),
+    birthday: document.querySelector("#clientEditorBirthday").value,
+    address: document.querySelector("#clientEditorAddress").value.trim(),
+    district: document.querySelector("#clientEditorDistrict").value.trim(),
+    source: document.querySelector("#clientEditorSource").value,
+    creditLimit: Number(document.querySelector("#clientEditorCreditLimit").value || 0),
+    status: document.querySelector("#clientEditorStatus").value,
+    marketingConsent: document.querySelector("#clientEditorMarketing").checked,
+    creditEnabled: document.querySelector("#clientEditorCreditEnabled").checked,
+    tags: document.querySelector("#clientEditorTags").value.split(",").map((tag) => tag.trim()).filter(Boolean),
+    notes: document.querySelector("#clientEditorNotes").value.trim()
+  };
+  if (id) {
+    const index = clientsData.findIndex((client) => client.id === id);
+    if (index === -1) return;
+    clientsData[index] = { ...clientsData[index], ...payload };
+    showToast("Cliente actualizado", "Los datos se guardaron correctamente.", "check");
+  } else {
+    const nextId = Math.max(0, ...clientsData.map((client) => Number(client.id.replace(/\D/g, "")) || 0)) + 1;
+    clientsData.unshift({
+      id: `CLI-${String(nextId).padStart(3, "0")}`,
+      ...payload,
+      joinedAt: new Date().toISOString().slice(0, 10), lastVisit: null, totalSpent: 0, pendingBalance: 0, visits: 0, vehicles: []
+    });
+    showToast("Cliente registrado", "La ficha ya está disponible en el catálogo.", "check");
+  }
+  persistClients();
+  closeModal("clientEditorModal");
+  renderClientsModule();
+}
+
+function renderClientProfile() {
+  const client = clientsData.find((item) => item.id === clientsState.profileId);
+  if (!client) return;
+  const orders = getClientOrders(client);
+  const completed = orders.filter((order) => appData.history.includes(order));
+  const active = orders.filter((order) => appData.orders.includes(order));
+  document.querySelector("#clientProfileAvatar").textContent = clientInitials(client.name);
+  document.querySelector("#clientProfileDocument").textContent = `${client.type === "empresa" ? "RUC" : "DNI"}: ${client.document || "No registrado"} · ${clientSegmentPill(client.segment).replace(/<[^>]+>/g, "")}`;
+  document.querySelector("#clientProfileTitle").textContent = client.name;
+  document.querySelector("#clientProfileContact").textContent = [client.phone, client.email, client.district].filter(Boolean).join(" · ") || "Sin datos de contacto";
+  document.querySelector("#clientProfileVehicleCount").textContent = client.vehicles.length;
+  document.querySelectorAll("[data-client-tab]").forEach((button) => button.classList.toggle("is-active", button.dataset.clientTab === clientsState.profileTab));
+  const content = document.querySelector("#clientProfileContent");
+
+  if (clientsState.profileTab === "overview") {
+    const next = getClientNextServiceState(client);
+    content.innerHTML = `<div class="client-profile-grid">
+      <div class="client-profile-summary">
+        <div class="client-stat"><small>Facturación histórica</small><strong>${formatCurrency(client.totalSpent)}</strong></div>
+        <div class="client-stat"><small>Saldo pendiente</small><strong class="${client.pendingBalance > 0 ? "client-balance--danger" : "client-balance--clear"}">${client.pendingBalance > 0 ? formatCurrency(client.pendingBalance) : "Al día"}</strong></div>
+        <div class="client-stat"><small>Visitas</small><strong>${client.visits}</strong></div>
+        <div class="client-stat"><small>Próximo servicio</small><strong>${escapeHTML(next.label)}</strong></div>
+      </div>
+      <div class="client-profile-contact-card"><p class="panel__eyebrow">Datos del cliente</p><h3>Contacto y condiciones</h3><dl>
+        <div><dt>Teléfono</dt><dd>${escapeHTML(client.phone || "—")}</dd></div><div><dt>Correo</dt><dd>${escapeHTML(client.email || "—")}</dd></div>
+        <div><dt>Dirección</dt><dd>${escapeHTML([client.address, client.district].filter(Boolean).join(", ") || "—")}</dd></div>
+        <div><dt>Origen</dt><dd>${escapeHTML(client.source || "—")}</dd></div><div><dt>Crédito</dt><dd>${client.creditEnabled ? formatCurrency(client.creditLimit) : "No habilitado"}</dd></div>
+      </dl></div>
+      <div class="client-profile-activity field-span-2"><p class="panel__eyebrow">Actividad reciente</p><h3>Órdenes y contacto</h3>${orders.slice(0, 5).map((order) => `<div class="client-activity-row"><span><svg><use href="#icon-wrench"></use></svg></span><div><strong>${escapeHTML(order.id)} · ${escapeHTML(order.service)}</strong><small>${escapeHTML(order.plate)} · ${formatDate(order.enteredAt, { day: "2-digit", month: "short", year: "numeric" })}</small></div><strong>${formatCurrency(order.billed ?? order.budget ?? order.currentCost ?? 0)}</strong></div>`).join("") || '<p class="empty-inline">Este cliente aún no registra órdenes.</p>'}</div>
+    </div>`;
+  } else if (clientsState.profileTab === "vehicles") {
+    content.innerHTML = `<div class="client-vehicle-grid">${client.vehicles.map((vehicle) => `<article class="client-vehicle-card"><div class="client-vehicle-head"><div><span class="client-vehicle-icon"><svg><use href="#icon-car"></use></svg></span><div><strong>${escapeHTML(vehicle.brand)} ${escapeHTML(vehicle.model)}</strong><small>${escapeHTML(vehicle.plate)} · ${escapeHTML(String(vehicle.year || "Año no registrado"))}</small></div></div><button class="icon-button" type="button" data-vehicle-edit="${vehicle.id}" aria-label="Editar vehículo"><svg><use href="#icon-edit"></use></svg></button></div><div class="client-vehicle-details"><span>Color: <strong>${escapeHTML(vehicle.color || "—")}</strong></span><span>Combustible: <strong>${escapeHTML(vehicle.fuel || "—")}</strong></span><span>Kilometraje: <strong>${Number(vehicle.mileage || 0).toLocaleString("es-PE")} km</strong></span><span>VIN: <strong>${escapeHTML(vehicle.vin || "—")}</strong></span></div><div class="client-vehicle-service"><small>Próximo mantenimiento</small><strong>${vehicle.nextService ? formatDate(vehicle.nextService, { day: "2-digit", month: "long", year: "numeric" }) : "Sin programar"}</strong></div>${vehicle.notes ? `<small>${escapeHTML(vehicle.notes)}</small>` : ""}</article>`).join("") || '<p class="empty-inline">No hay vehículos registrados.</p>'}</div>`;
+  } else if (clientsState.profileTab === "history") {
+    content.innerHTML = `<div class="responsive-table-wrap"><table class="data-table"><thead><tr><th>Orden</th><th>Vehículo</th><th>Servicio</th><th>Fecha</th><th>Estado</th><th>Total</th></tr></thead><tbody>${orders.map((order) => `<tr><td><strong>${escapeHTML(order.id)}</strong></td><td>${escapeHTML(order.plate)}<small>${escapeHTML(order.vehicle || "")}</small></td><td>${escapeHTML(order.service || "—")}</td><td>${formatDate(order.enteredAt, { day: "2-digit", month: "short", year: "numeric" })}</td><td>${escapeHTML(statusConfig[order.status]?.label || order.status || "—")}</td><td><strong>${formatCurrency(order.billed ?? order.budget ?? order.currentCost ?? 0)}</strong></td></tr>`).join("") || '<tr><td colspan="6">Sin historial registrado.</td></tr>'}</tbody></table></div>`;
+  } else if (clientsState.profileTab === "finance") {
+    const average = completed.length ? completed.reduce((sum, order) => sum + Number(order.billed || 0), 0) / completed.length : 0;
+    const creditAvailable = Math.max(0, Number(client.creditLimit || 0) - Number(client.pendingBalance || 0));
+    content.innerHTML = `<div class="client-finance-grid"><article class="client-finance-card"><p class="panel__eyebrow">Cuenta corriente</p><h3>Resumen financiero</h3><dl><div><dt>Total facturado</dt><dd>${formatCurrency(client.totalSpent)}</dd></div><div><dt>Ticket promedio</dt><dd>${formatCurrency(average)}</dd></div><div><dt>Saldo pendiente</dt><dd class="${client.pendingBalance > 0 ? "client-balance--danger" : "client-balance--clear"}">${formatCurrency(client.pendingBalance)}</dd></div><div><dt>Crédito disponible</dt><dd>${client.creditEnabled ? formatCurrency(creditAvailable) : "No habilitado"}</dd></div></dl></article><article class="client-finance-card"><p class="panel__eyebrow">Situación actual</p><h3>Órdenes abiertas</h3><dl><div><dt>Órdenes activas</dt><dd>${active.length}</dd></div><div><dt>Presupuesto comprometido</dt><dd>${formatCurrency(active.reduce((sum, order) => sum + Number(order.budget || 0), 0))}</dd></div><div><dt>Pagos pendientes</dt><dd>${formatCurrency(client.pendingBalance)}</dd></div><div><dt>Condición</dt><dd>${client.creditEnabled ? "Crédito autorizado" : "Contado"}</dd></div></dl></article></div>`;
+  } else {
+    content.innerHTML = `<article class="client-note-card"><p class="panel__eyebrow">Información interna</p><h3>Notas y preferencias</h3><p>${escapeHTML(client.notes || "No existen notas internas para este cliente.")}</p><div class="client-tags">${(client.tags || []).map((tag) => `<span class="client-tag">${escapeHTML(tag)}</span>`).join("")}</div></article>`;
+  }
+}
+
+function openClientProfile(clientId) {
+  const client = clientsData.find((item) => item.id === clientId);
+  if (!client) return;
+  clientsState.profileId = clientId;
+  clientsState.profileTab = "overview";
+  renderClientProfile();
+  openModal("clientProfileModal");
+}
+
+function openVehicleEditor(vehicleId = null) {
+  const client = clientsData.find((item) => item.id === clientsState.profileId);
+  if (!client) return;
+  const vehicle = vehicleId ? client.vehicles.find((item) => item.id === vehicleId) : null;
+  document.querySelector("#vehicleEditorTitle").textContent = vehicle ? "Editar vehículo" : "Agregar vehículo";
+  document.querySelector("#vehicleEditorId").value = vehicle?.id || "";
+  document.querySelector("#vehicleEditorPlate").value = vehicle?.plate || "";
+  document.querySelector("#vehicleEditorBrand").value = vehicle?.brand || "";
+  document.querySelector("#vehicleEditorModel").value = vehicle?.model || "";
+  document.querySelector("#vehicleEditorYear").value = vehicle?.year || "";
+  document.querySelector("#vehicleEditorColor").value = vehicle?.color || "";
+  document.querySelector("#vehicleEditorFuel").value = vehicle?.fuel || "Gasolina";
+  document.querySelector("#vehicleEditorMileage").value = vehicle?.mileage || 0;
+  document.querySelector("#vehicleEditorVin").value = vehicle?.vin || "";
+  document.querySelector("#vehicleEditorNextService").value = vehicle?.nextService || "";
+  document.querySelector("#vehicleEditorNotes").value = vehicle?.notes || "";
+  openModal("vehicleEditorModal");
+}
+
+function saveVehicleFromEditor() {
+  const form = document.querySelector("#vehicleEditorForm");
+  if (!form.reportValidity()) return;
+  const client = clientsData.find((item) => item.id === clientsState.profileId);
+  if (!client) return;
+  const vehicleId = document.querySelector("#vehicleEditorId").value;
+  const payload = {
+    plate: document.querySelector("#vehicleEditorPlate").value.trim().toUpperCase(), brand: document.querySelector("#vehicleEditorBrand").value.trim(), model: document.querySelector("#vehicleEditorModel").value.trim(),
+    year: Number(document.querySelector("#vehicleEditorYear").value || 0) || "", color: document.querySelector("#vehicleEditorColor").value.trim(), fuel: document.querySelector("#vehicleEditorFuel").value,
+    mileage: Number(document.querySelector("#vehicleEditorMileage").value || 0), vin: document.querySelector("#vehicleEditorVin").value.trim().toUpperCase(), nextService: document.querySelector("#vehicleEditorNextService").value, notes: document.querySelector("#vehicleEditorNotes").value.trim()
+  };
+  if (vehicleId) {
+    const index = client.vehicles.findIndex((vehicle) => vehicle.id === vehicleId);
+    client.vehicles[index] = { ...client.vehicles[index], ...payload };
+    showToast("Vehículo actualizado", "Los datos técnicos fueron guardados.", "car");
+  } else {
+    client.vehicles.push({ id: `VEH-${Date.now()}`, ...payload });
+    showToast("Vehículo agregado", "Ya forma parte de la ficha del cliente.", "car");
+  }
+  persistClients();
+  closeModal("vehicleEditorModal");
+  renderClientProfile();
+  renderClientsModule();
+}
+
+function prefillNewOrderFromClient(clientId) {
+  const client = clientsData.find((item) => item.id === clientId);
+  if (!client) return;
+  closeModal("clientProfileModal");
+  setActiveView("nueva-orden");
+  const vehicle = client.vehicles[0];
+  const assignments = {
+    clientName: client.name, clientDocument: client.document, clientPhone: client.phone, clientEmail: client.email,
+    vehiclePlate: vehicle?.plate || "", vehicleBrand: vehicle?.brand || "", vehicleModel: vehicle?.model || "", vehicleYear: vehicle?.year || "", vehicleColor: vehicle?.color || "", vehicleMileage: vehicle?.mileage || "", vehicleVin: vehicle?.vin || ""
+  };
+  Object.entries(assignments).forEach(([id, value]) => { const input = document.querySelector(`#${id}`); if (input) input.value = value; });
+  const fuel = document.querySelector("#vehicleFuel");
+  if (fuel && vehicle?.fuel) fuel.value = vehicle.fuel;
+  showToast("Datos precargados", `${client.name} y su vehículo fueron cargados en la orden.`, "check");
+}
+
+function exportClientsCsv() {
+  const header = ["ID", "Tipo", "Nombre", "Documento", "Teléfono", "Correo", "Distrito", "Segmento", "Vehículos", "Visitas", "Facturación", "Saldo"];
+  const rows = getFilteredClients().map((client) => [client.id, client.type, client.name, client.document, client.phone, client.email, client.district, client.segment, client.vehicles.map((vehicle) => vehicle.plate).join(" | "), client.visits, client.totalSpent, client.pendingBalance]);
+  const csv = [header, ...rows].map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+  downloadTextFile(`\uFEFF${csv}`, `clientes-torqueflow-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
+  showToast("Clientes exportados", "El archivo CSV se descargó correctamente.", "download");
+}
+
+function getSettingInput(id) {
+  return document.querySelector(`#${id}`);
+}
+
+function setSettingValue(id, value) {
+  const element = getSettingInput(id);
+  if (!element) return;
+  if (element.type === "checkbox") element.checked = Boolean(value);
+  else element.value = value ?? "";
+}
+
+function getSettingValue(id, numeric = false) {
+  const element = getSettingInput(id);
+  if (!element) return numeric ? 0 : "";
+  if (element.type === "checkbox") return element.checked;
+  return numeric ? Number(element.value || 0) : element.value;
+}
+
+function resolveConfiguredTheme(theme) {
+  if (theme !== "system") return theme;
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function applyVisualSettings() {
+  const business = settingsData.business;
+  const accent = business.accent || "#2f8cff";
+  document.documentElement.style.setProperty("--primary", accent);
+  document.documentElement.style.setProperty("--primary-strong", accent);
+  document.documentElement.style.setProperty("--accent", accent);
+  applyTheme(resolveConfiguredTheme(business.theme));
+  document.body.classList.toggle("density-compact", business.density === "compact");
+  const name = business.workshopName || "TorqueFlow Taller";
+  appData.workshop.name = name;
+  appData.workshop.currency = settingsData.finance.currency || "PEN";
+  document.querySelectorAll(".brand__text strong").forEach((node) => { node.textContent = name.replace(/\s+Taller$/i, ""); });
+}
+
+function populateSettingsForm() {
+  const b = settingsData.business;
+  setSettingValue("settingWorkshopName", b.workshopName); setSettingValue("settingLegalName", b.legalName); setSettingValue("settingRuc", b.ruc); setSettingValue("settingPhone", b.phone); setSettingValue("settingWhatsapp", b.whatsapp); setSettingValue("settingEmail", b.email); setSettingValue("settingAddress", b.address); setSettingValue("settingDistrict", b.district); setSettingValue("settingTimezone", b.timezone); setSettingValue("settingAccent", b.accent); setSettingValue("settingAccentText", b.accent); setSettingValue("settingDensity", b.density);
+  const themeRadio = document.querySelector(`input[name="settingTheme"][value="${b.theme}"]`); if (themeRadio) themeRadio.checked = true;
+
+  const o = settingsData.operations;
+  setSettingValue("settingOrderPrefix", o.orderPrefix); setSettingValue("settingNextOrder", o.nextOrder); setSettingValue("settingDeliveryHours", o.deliveryHours); setSettingValue("settingBudgetThreshold", o.budgetThreshold); setSettingValue("settingRequirePhotos", o.requirePhotos); setSettingValue("settingRequireApproval", o.requireApproval); setSettingValue("settingPreventNegativeStock", o.preventNegativeStock); setSettingValue("settingAutoClose", o.autoClose); setSettingValue("settingStartAlert", o.startAlert); setSettingValue("settingExternalAlert", o.externalAlert); setSettingValue("settingWarrantyAlert", o.warrantyAlert); setSettingValue("settingFuelSteps", o.fuelSteps);
+
+  const s = settingsData.services;
+  setSettingValue("settingLaborHour", s.laborHour); setSettingValue("settingDiagnosticMinimum", s.diagnosticMinimum); setSettingValue("settingDiagnosticMinutes", s.diagnosticMinutes); setSettingValue("settingDefaultWarranty", s.defaultWarranty);
+
+  const f = settingsData.finance;
+  setSettingValue("settingTaxEnabled", f.taxEnabled); setSettingValue("settingCurrency", f.currency); setSettingValue("settingTaxRate", f.taxRate); setSettingValue("settingPartsMargin", f.partsMargin); setSettingValue("settingExternalMargin", f.externalMargin); setSettingValue("settingDefaultCredit", f.defaultCredit); setSettingValue("settingLowStock", f.lowStock);
+
+  const n = settingsData.notifications;
+  setSettingValue("settingWhatsappEnabled", n.whatsappEnabled); setSettingValue("settingEmailEnabled", n.emailEnabled); setSettingValue("settingNotifyCreated", n.notifyCreated); setSettingValue("settingNotifyApproval", n.notifyApproval); setSettingValue("settingNotifyStatus", n.notifyStatus); setSettingValue("settingNotifyReady", n.notifyReady); setSettingValue("settingNotifyStock", n.notifyStock); setSettingValue("settingNotifyOverdue", n.notifyOverdue); setSettingValue("settingTemplateCreated", n.templateCreated); setSettingValue("settingTemplateApproval", n.templateApproval); setSettingValue("settingTemplateReady", n.templateReady);
+
+  const d = settingsData.documents;
+  setSettingValue("settingDocumentLogo", d.logo); setSettingValue("settingDocumentDiagnosis", d.diagnosis); setSettingValue("settingDocumentInternalCosts", d.internalCosts); setSettingValue("settingDocumentSignature", d.signature); setSettingValue("settingDocumentHeader", d.header); setSettingValue("settingDocumentFooter", d.footer); setSettingValue("settingDocumentTerms", d.terms);
+
+  const sec = settingsData.security;
+  setSettingValue("settingAutosave", sec.autosave); setSettingValue("settingAuditLog", sec.auditLog); setSettingValue("settingAutomaticBackup", sec.automaticBackup); setSettingValue("settingDeleteConfirmation", sec.deleteConfirmation); setSettingValue("settingSessionTimeout", sec.sessionTimeout); setSettingValue("settingBackupFrequency", sec.backupFrequency);
+  updateSettingsPreview();
+}
+
+function readSettingsForm() {
+  const selectedTheme = document.querySelector('input[name="settingTheme"]:checked')?.value || "dark";
+  settingsData.business = { ...settingsData.business, workshopName: getSettingValue("settingWorkshopName").trim(), legalName: getSettingValue("settingLegalName").trim(), ruc: getSettingValue("settingRuc").trim(), phone: getSettingValue("settingPhone").trim(), whatsapp: getSettingValue("settingWhatsapp").trim(), email: getSettingValue("settingEmail").trim(), address: getSettingValue("settingAddress").trim(), district: getSettingValue("settingDistrict").trim(), timezone: getSettingValue("settingTimezone"), theme: selectedTheme, accent: getSettingValue("settingAccent"), density: getSettingValue("settingDensity") };
+  settingsData.operations = { ...settingsData.operations, orderPrefix: getSettingValue("settingOrderPrefix").trim().toUpperCase(), nextOrder: getSettingValue("settingNextOrder", true), deliveryHours: getSettingValue("settingDeliveryHours"), budgetThreshold: getSettingValue("settingBudgetThreshold", true), requirePhotos: getSettingValue("settingRequirePhotos"), requireApproval: getSettingValue("settingRequireApproval"), preventNegativeStock: getSettingValue("settingPreventNegativeStock"), autoClose: getSettingValue("settingAutoClose"), startAlert: getSettingValue("settingStartAlert"), externalAlert: getSettingValue("settingExternalAlert"), warrantyAlert: getSettingValue("settingWarrantyAlert", true), fuelSteps: getSettingValue("settingFuelSteps") };
+  settingsData.services = { ...settingsData.services, laborHour: getSettingValue("settingLaborHour", true), diagnosticMinimum: getSettingValue("settingDiagnosticMinimum", true), diagnosticMinutes: getSettingValue("settingDiagnosticMinutes", true), defaultWarranty: getSettingValue("settingDefaultWarranty", true) };
+  settingsData.finance = { ...settingsData.finance, taxEnabled: getSettingValue("settingTaxEnabled"), currency: getSettingValue("settingCurrency"), taxRate: getSettingValue("settingTaxRate", true), partsMargin: getSettingValue("settingPartsMargin", true), externalMargin: getSettingValue("settingExternalMargin", true), defaultCredit: getSettingValue("settingDefaultCredit", true), lowStock: getSettingValue("settingLowStock", true) };
+  settingsData.notifications = { ...settingsData.notifications, whatsappEnabled: getSettingValue("settingWhatsappEnabled"), emailEnabled: getSettingValue("settingEmailEnabled"), notifyCreated: getSettingValue("settingNotifyCreated"), notifyApproval: getSettingValue("settingNotifyApproval"), notifyStatus: getSettingValue("settingNotifyStatus"), notifyReady: getSettingValue("settingNotifyReady"), notifyStock: getSettingValue("settingNotifyStock"), notifyOverdue: getSettingValue("settingNotifyOverdue"), templateCreated: getSettingValue("settingTemplateCreated"), templateApproval: getSettingValue("settingTemplateApproval"), templateReady: getSettingValue("settingTemplateReady") };
+  settingsData.documents = { ...settingsData.documents, logo: getSettingValue("settingDocumentLogo"), diagnosis: getSettingValue("settingDocumentDiagnosis"), internalCosts: getSettingValue("settingDocumentInternalCosts"), signature: getSettingValue("settingDocumentSignature"), header: getSettingValue("settingDocumentHeader"), footer: getSettingValue("settingDocumentFooter"), terms: getSettingValue("settingDocumentTerms") };
+  settingsData.security = { ...settingsData.security, autosave: getSettingValue("settingAutosave"), auditLog: getSettingValue("settingAuditLog"), automaticBackup: getSettingValue("settingAutomaticBackup"), deleteConfirmation: getSettingValue("settingDeleteConfirmation"), sessionTimeout: getSettingValue("settingSessionTimeout"), backupFrequency: getSettingValue("settingBackupFrequency") };
+}
+
+function markSettingsDirty() {
+  settingsDirty = true;
+  const state = document.querySelector("#settingsSaveState");
+  state.className = "settings-save-state is-dirty";
+  state.innerHTML = "<i></i> Cambios sin guardar";
+  updateSettingsPreview();
+}
+
+function markSettingsSaved() {
+  settingsDirty = false;
+  const state = document.querySelector("#settingsSaveState");
+  state.className = "settings-save-state is-saved";
+  state.innerHTML = "<i></i> Guardado";
+  setTimeout(() => { if (!settingsDirty) { state.className = "settings-save-state"; state.innerHTML = "<i></i> Sin cambios"; } }, 1800);
+}
+
+function updateSettingsPreview() {
+  const workshopName = getSettingValue("settingWorkshopName") || settingsData.business.workshopName;
+  const initials = workshopName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const preview = document.querySelector("#workshopLogoPreview");
+  if (preview) preview.querySelector("span").textContent = initials || "TF";
+  const prefix = getSettingValue("settingOrderPrefix") || settingsData.operations.orderPrefix;
+  const number = getSettingValue("settingNextOrder", true) || settingsData.operations.nextOrder;
+  const orderPreview = document.querySelector("#orderNumberPreview");
+  if (orderPreview) orderPreview.textContent = `${prefix}-${number}`;
+  const accentText = document.querySelector("#settingAccentText");
+  const accent = document.querySelector("#settingAccent");
+  if (accent && accentText && document.activeElement !== accentText) accentText.value = accent.value;
+  updateSecurityScore();
+}
+
+function renderSettingsUsers() {
+  document.querySelector("#settingsUsersBody").innerHTML = settingsData.users.map((user) => `<tr><td><div class="settings-member"><span class="settings-member-avatar">${clientInitials(user.name)}</span><div><strong>${escapeHTML(user.name)}</strong><small>${escapeHTML(user.email || user.phone || "Sin contacto")}</small></div></div></td><td>${escapeHTML(user.role)}</td><td><span class="pill pill--${user.status === "active" ? "success" : "neutral"}">${user.status === "active" ? "Activo" : "Inactivo"}</span></td><td>${user.lastAccess ? formatDate(user.lastAccess, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "Nunca"}</td><td>${escapeHTML({ full: "Completo", operations: "Operación", inventory: "Inventario", read: "Lectura" }[user.permission] || user.permission)}</td><td><div class="settings-member-actions"><button class="icon-button" type="button" data-settings-member-edit="user:${user.id}" aria-label="Editar"><svg><use href="#icon-edit"></use></svg></button><button class="icon-button" type="button" data-settings-member-toggle="user:${user.id}" aria-label="Cambiar estado"><svg><use href="#icon-shield"></use></svg></button></div></td></tr>`).join("");
+}
+
+function renderSettingsMechanics() {
+  document.querySelector("#settingsMechanicsGrid").innerHTML = settingsData.mechanics.map((mechanic) => `<article class="settings-mechanic-card"><div class="settings-mechanic-card__head"><span class="settings-member-avatar">${clientInitials(mechanic.name)}</span><div><strong>${escapeHTML(mechanic.name)}</strong><small>${escapeHTML(mechanic.role)}</small></div><span class="pill pill--${mechanic.status === "active" ? "success" : "neutral"}">${mechanic.status === "active" ? "Activo" : "Inactivo"}</span></div><div class="settings-mechanic-card__stats"><div><span>Órdenes activas</span><strong>${mechanic.activeOrders || 0}</strong></div><div><span>Eficiencia</span><strong>${mechanic.efficiency || 0}%</strong></div></div><div class="settings-member-actions"><button class="button button--ghost button--small" type="button" data-settings-member-edit="mechanic:${mechanic.id}"><svg><use href="#icon-edit"></use></svg> Editar</button><button class="icon-button" type="button" data-settings-member-toggle="mechanic:${mechanic.id}" aria-label="Cambiar estado"><svg><use href="#icon-shield"></use></svg></button></div></article>`).join("");
+}
+
+function renderSettingsServiceCategories() {
+  document.querySelector("#settingsServicesCount").textContent = `${serviceCatalogData.length} servicios`;
+  document.querySelector("#settingsServiceCategories").innerHTML = settingsData.services.categories.map((category) => {
+    const count = serviceCatalogData.filter((service) => service.category === category.id).length;
+    return `<div class="settings-category-row"><div><strong>${escapeHTML(category.name)}</strong><small>${count} servicios configurados</small></div><div class="settings-category-controls"><label class="input-suffix"><input type="number" min="0" max="200" value="${category.margin}" data-category-margin="${category.id}" aria-label="Margen de ${escapeHTML(category.name)}"><span>%</span></label><label class="setting-switch setting-switch--compact" aria-label="Activar ${escapeHTML(category.name)}"><input type="checkbox" data-category-active="${category.id}" ${category.active ? "checked" : ""}><i></i></label></div></div>`;
+  }).join("");
+}
+
+function renderSettingsPayments() {
+  document.querySelector("#settingsPaymentMethods").innerHTML = settingsData.finance.payments.map((payment) => `<label class="settings-payment-item"><div><strong>${escapeHTML(payment.name)}</strong><small>Disponible en órdenes y cobros</small></div><span class="setting-switch setting-switch--compact"><input type="checkbox" data-payment-active="${payment.id}" ${payment.active ? "checked" : ""}><i></i></span></label>`).join("");
+}
+
+function updateSecurityScore() {
+  if (!settingsData) return;
+  const controls = ["settingAutosave", "settingAuditLog", "settingAutomaticBackup", "settingDeleteConfirmation"].map((id) => document.querySelector(`#${id}`)?.checked ?? false);
+  let score = 45 + controls.filter(Boolean).length * 10;
+  if (getSettingValue("settingSessionTimeout", true) <= 30) score += 10;
+  if (settingsData.security.lastBackup) score += 5;
+  score = Math.min(100, score);
+  const output = document.querySelector("#securityScoreValue");
+  if (output) output.textContent = `${score}%`;
+}
+
+function renderSettingsModule() {
+  if (!settingsData) initializeClientsSettingsStorage();
+  populateSettingsForm();
+  renderSettingsUsers();
+  renderSettingsMechanics();
+  renderSettingsServiceCategories();
+  renderSettingsPayments();
+  applyVisualSettings();
+  const lastBackup = document.querySelector("#settingsLastBackup");
+  lastBackup.textContent = settingsData.security.lastBackup ? `Último respaldo: ${formatDate(settingsData.security.lastBackup, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : "Último respaldo: nunca";
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll("[data-settings-tab]").forEach((button) => button.classList.toggle("is-active", button.dataset.settingsTab === tab));
+  document.querySelectorAll("[data-settings-panel]").forEach((panel) => {
+    const active = panel.dataset.settingsPanel === tab;
+    panel.hidden = !active;
+    panel.classList.toggle("is-active", active);
+  });
+}
+
+function saveSettings() {
+  const form = document.querySelector("#settingsForm");
+  if (!form.reportValidity()) return;
+  readSettingsForm();
+  persistSettings();
+  applyVisualSettings();
+  markSettingsSaved();
+  renderSettingsServiceCategories();
+  renderSettingsPayments();
+  showToast("Configuración guardada", "Los cambios ya están activos en el sistema.", "save");
+}
+
+function resetSettings() {
+  if (!window.confirm("¿Restaurar la configuración predeterminada? Los usuarios y mecánicos también volverán a los valores iniciales.")) return;
+  settingsData = deepClone(settingsSeed);
+  persistSettings();
+  renderSettingsModule();
+  markSettingsSaved();
+  showToast("Configuración restaurada", "Se recuperaron los valores predeterminados.", "refresh");
+}
+
+function openSettingsMemberEditor(kind, id = null) {
+  const collection = kind === "mechanic" ? settingsData.mechanics : settingsData.users;
+  const member = id ? collection.find((item) => item.id === id) : null;
+  document.querySelector("#settingsMemberTitle").textContent = `${member ? "Editar" : "Nuevo"} ${kind === "mechanic" ? "mecánico" : "usuario"}`;
+  document.querySelector("#settingsMemberId").value = member?.id || "";
+  document.querySelector("#settingsMemberKind").value = kind;
+  document.querySelector("#settingsMemberName").value = member?.name || "";
+  document.querySelector("#settingsMemberEmail").value = member?.email || "";
+  document.querySelector("#settingsMemberPhone").value = member?.phone || "";
+  document.querySelector("#settingsMemberRole").value = member?.role || "";
+  document.querySelector("#settingsMemberStatus").value = member?.status || "active";
+  document.querySelector("#settingsMemberPermission").value = member?.permission || "operations";
+  openModal("settingsMemberModal");
+}
+
+function saveSettingsMember() {
+  const form = document.querySelector("#settingsMemberForm");
+  if (!form.reportValidity()) return;
+  const kind = document.querySelector("#settingsMemberKind").value;
+  const id = document.querySelector("#settingsMemberId").value;
+  const collection = kind === "mechanic" ? settingsData.mechanics : settingsData.users;
+  const payload = {
+    name: document.querySelector("#settingsMemberName").value.trim(), email: document.querySelector("#settingsMemberEmail").value.trim(), phone: document.querySelector("#settingsMemberPhone").value.trim(), role: document.querySelector("#settingsMemberRole").value.trim(), status: document.querySelector("#settingsMemberStatus").value, permission: document.querySelector("#settingsMemberPermission").value
+  };
+  if (id) {
+    const index = collection.findIndex((item) => item.id === id);
+    collection[index] = { ...collection[index], ...payload };
+  } else {
+    const prefix = kind === "mechanic" ? "MEC" : "USR";
+    const next = Math.max(0, ...collection.map((item) => Number(item.id.replace(/\D/g, "")) || 0)) + 1;
+    collection.push({ id: `${prefix}-${String(next).padStart(3, "0")}`, ...payload, ...(kind === "mechanic" ? { activeOrders: 0, efficiency: 0 } : { lastAccess: null }) });
+  }
+  persistSettings();
+  closeModal("settingsMemberModal");
+  renderSettingsUsers();
+  renderSettingsMechanics();
+  showToast("Miembro guardado", `${kind === "mechanic" ? "El mecánico" : "El usuario"} fue actualizado correctamente.`, "user");
+}
+
+function toggleSettingsMember(kind, id) {
+  const collection = kind === "mechanic" ? settingsData.mechanics : settingsData.users;
+  const member = collection.find((item) => item.id === id);
+  if (!member) return;
+  member.status = member.status === "active" ? "inactive" : "active";
+  persistSettings();
+  renderSettingsUsers();
+  renderSettingsMechanics();
+  showToast("Estado actualizado", `${member.name} ahora está ${member.status === "active" ? "activo" : "inactivo"}.`, "shield");
+}
+
+function renderSettingsDocumentPreview() {
+  readSettingsForm();
+  const b = settingsData.business;
+  const d = settingsData.documents;
+  document.querySelector("#settingsDocumentPreview").innerHTML = `<header><div><div class="document-brand">${d.logo ? escapeHTML(b.workshopName) : "Taller mecánico"}</div><p>${escapeHTML(b.legalName || "")}</p><p>RUC ${escapeHTML(b.ruc || "—")} · ${escapeHTML(b.phone || "—")}</p></div><div><strong>${escapeHTML(d.header || "ORDEN DE TRABAJO")}</strong><p>OT-1049</p><p>${formatDate(new Date().toISOString(), { day: "2-digit", month: "long", year: "numeric" })}</p></div></header><div class="document-grid"><div class="document-box"><strong>Cliente</strong><p>Carlos Mendoza</p><p>DNI 43125874 · 987 221 410</p></div><div class="document-box"><strong>Vehículo</strong><p>Toyota Hilux 2021</p><p>Placa M4R-921 · 89 740 km</p></div></div>${d.diagnosis ? '<div class="document-box"><strong>Diagnóstico</strong><p>Pérdida de compresión y recalentamiento. Se requiere revisión de culata.</p></div>' : ""}<table><thead><tr><th>Concepto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody><tr><td>Diagnóstico especializado</td><td>1</td><td>S/ 80.00</td><td>S/ 80.00</td></tr><tr><td>Mano de obra estimada</td><td>6 h</td><td>S/ 65.00</td><td>S/ 390.00</td></tr><tr><td>Repuestos estimados</td><td>1</td><td>S/ 580.00</td><td>S/ 580.00</td></tr></tbody><tfoot><tr><th colspan="3">Total autorizado</th><th>S/ 1,050.00</th></tr></tfoot></table>${d.internalCosts ? '<div class="document-box"><strong>Control interno:</strong> costo estimado S/ 720.00 · margen S/ 330.00</div>' : ""}<p><small>${escapeHTML(d.terms || "")}</small></p>${d.signature ? '<div class="document-grid"><div class="document-box">Firma del cliente<br><br>________________________</div><div class="document-box">Responsable del taller<br><br>________________________</div></div>' : ""}<p style="text-align:center"><strong>${escapeHTML(d.footer || "")}</strong></p>`;
+}
+
+function openSettingsDocumentPreview() {
+  renderSettingsDocumentPreview();
+  openModal("settingsDocumentModal");
+}
+
+function exportSystemBackup() {
+  readSettingsForm();
+  settingsData.security.lastBackup = new Date().toISOString();
+  persistSettings();
+  const backup = { version: 1, exportedAt: settingsData.security.lastBackup, workshop: settingsData.business.workshopName, clients: clientsData, settings: settingsData, dashboard: appData };
+  downloadTextFile(JSON.stringify(backup, null, 2), `torqueflow-respaldo-${new Date().toISOString().slice(0, 10)}.json`, "application/json;charset=utf-8");
+  document.querySelector("#settingsLastBackup").textContent = `Último respaldo: ${formatDate(settingsData.security.lastBackup, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+  updateSecurityScore();
+  showToast("Respaldo descargado", "Clientes, configuración y datos operativos fueron incluidos.", "download");
+}
+
+function importSystemBackup(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const backup = JSON.parse(reader.result);
+      if (!backup.clients || !backup.settings) throw new Error("Formato de respaldo no reconocido.");
+      clientsData = backup.clients;
+      settingsData = backup.settings;
+      persistClients(); persistSettings();
+      renderSettingsModule(); renderClientsModule();
+      showToast("Respaldo restaurado", "La información fue recuperada correctamente.", "refresh");
+    } catch (error) {
+      showToast("No se pudo restaurar", error.message || "El archivo no es válido.", "alert");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function prepareClientCampaign() {
+  const targets = clientsData.filter((client) => client.marketingConsent && (client.segment === "inactivo" || ["due", "soon"].includes(getClientNextServiceState(client).key)));
+  if (!targets.length) { showToast("Sin destinatarios", "No hay clientes elegibles para esta campaña.", "alert"); return; }
+  const csv = [["Cliente", "Teléfono", "Segmento", "Próximo servicio"], ...targets.map((client) => [client.name, client.phone, client.segment, getClientNextServiceState(client).label])].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+  downloadTextFile(`\uFEFF${csv}`, `campana-clientes-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
+  showToast("Campaña preparada", `${targets.length} clientes fueron incluidos en el archivo.`, "download");
+}
+
+function bindClientsSettingsEvents() {
+  document.querySelector("#clientsSearch")?.addEventListener("input", (event) => { clientsState.search = event.target.value.trim(); renderClientsModule(); });
+  document.querySelector("#clientsTableViewButton")?.addEventListener("click", () => { clientsState.view = "table"; renderClientsModule(); });
+  document.querySelector("#clientsCardViewButton")?.addEventListener("click", () => { clientsState.view = "cards"; renderClientsModule(); });
+  document.querySelector("#clientsFilterToggle")?.addEventListener("click", (event) => { const grid = document.querySelector("#clientsFilterGrid"); grid.hidden = !grid.hidden; event.currentTarget.setAttribute("aria-expanded", String(!grid.hidden)); });
+  [["clientsTypeFilter", "type"], ["clientsSegmentFilter", "segment"], ["clientsBalanceFilter", "balance"], ["clientsServiceFilter", "service"]].forEach(([id, key]) => document.querySelector(`#${id}`)?.addEventListener("change", (event) => { clientsState.filters[key] = event.target.value; renderClientsModule(); }));
+  document.querySelector("#clientsSort")?.addEventListener("change", (event) => { clientsState.sort = event.target.value; renderClientsModule(); });
+  document.querySelector("#clientsClearFilters")?.addEventListener("click", () => { clientsState.search = ""; clientsState.filters = { type: "all", segment: "all", balance: "all", service: "all" }; clientsState.sort = "recent"; document.querySelector("#clientsSearch").value = ""; ["clientsTypeFilter", "clientsSegmentFilter", "clientsBalanceFilter", "clientsServiceFilter"].forEach((id) => { document.querySelector(`#${id}`).value = "all"; }); document.querySelector("#clientsSort").value = "recent"; renderClientsModule(); });
+  document.querySelector("#clientNewButton")?.addEventListener("click", () => openClientEditor());
+  document.querySelector("#clientsExportButton")?.addEventListener("click", exportClientsCsv);
+  document.querySelector("#clientCampaignButton")?.addEventListener("click", prepareClientCampaign);
+  document.querySelector("#clientSaveButton")?.addEventListener("click", saveClientFromEditor);
+  document.querySelector("#vehicleSaveButton")?.addEventListener("click", saveVehicleFromEditor);
+  document.querySelector("#clientProfileEditButton")?.addEventListener("click", () => { closeModal("clientProfileModal"); openClientEditor(clientsState.profileId); });
+  document.querySelector("#clientAddVehicleButton")?.addEventListener("click", () => openVehicleEditor());
+  document.querySelector("#clientCreateOrderButton")?.addEventListener("click", () => prefillNewOrderFromClient(clientsState.profileId));
+  document.querySelector("#clientProfileWhatsApp")?.addEventListener("click", () => { const client = clientsData.find((item) => item.id === clientsState.profileId); if (!client?.phone) return showToast("Teléfono no disponible", "El cliente no tiene un número registrado.", "alert"); window.open(`https://wa.me/51${client.phone.replace(/\D/g, "")}`, "_blank", "noopener"); });
+  document.querySelectorAll("[data-client-tab]").forEach((button) => button.addEventListener("click", () => { clientsState.profileTab = button.dataset.clientTab; renderClientProfile(); }));
+
+  document.querySelectorAll("[data-settings-tab]").forEach((button) => button.addEventListener("click", () => switchSettingsTab(button.dataset.settingsTab)));
+  document.querySelector("#settingsForm")?.addEventListener("input", markSettingsDirty);
+  document.querySelector("#settingsForm")?.addEventListener("change", markSettingsDirty);
+  document.querySelector("#settingsSaveButton")?.addEventListener("click", saveSettings);
+  document.querySelector("#settingsResetButton")?.addEventListener("click", resetSettings);
+  document.querySelector("#settingsAddUser")?.addEventListener("click", () => openSettingsMemberEditor("user"));
+  document.querySelector("#settingsAddMechanic")?.addEventListener("click", () => openSettingsMemberEditor("mechanic"));
+  document.querySelector("#settingsMemberSave")?.addEventListener("click", saveSettingsMember);
+  document.querySelector("#settingsPreviewDocument")?.addEventListener("click", openSettingsDocumentPreview);
+  document.querySelector("#settingsDocumentPrint")?.addEventListener("click", () => window.print());
+  document.querySelector("#settingsExportBackup")?.addEventListener("click", exportSystemBackup);
+  document.querySelector("#settingsImportBackup")?.addEventListener("change", (event) => { importSystemBackup(event.target.files[0]); event.target.value = ""; });
+  document.querySelector("#settingAccent")?.addEventListener("input", (event) => { document.querySelector("#settingAccentText").value = event.target.value; document.documentElement.style.setProperty("--primary", event.target.value); document.documentElement.style.setProperty("--accent", event.target.value); });
+  document.querySelector("#settingAccentText")?.addEventListener("change", (event) => { if (/^#[0-9a-f]{6}$/i.test(event.target.value)) { document.querySelector("#settingAccent").value = event.target.value; document.documentElement.style.setProperty("--primary", event.target.value); document.documentElement.style.setProperty("--accent", event.target.value); } });
+  document.querySelectorAll('input[name="settingTheme"]').forEach((radio) => radio.addEventListener("change", () => applyTheme(resolveConfiguredTheme(radio.value))));
+
+  document.addEventListener("change", (event) => {
+    const categoryActive = event.target.closest("[data-category-active]");
+    const categoryMargin = event.target.closest("[data-category-margin]");
+    const paymentActive = event.target.closest("[data-payment-active]");
+    if (categoryActive) { const category = settingsData.services.categories.find((item) => item.id === categoryActive.dataset.categoryActive); if (category) category.active = categoryActive.checked; markSettingsDirty(); }
+    if (categoryMargin) { const category = settingsData.services.categories.find((item) => item.id === categoryMargin.dataset.categoryMargin); if (category) category.margin = Number(categoryMargin.value || 0); markSettingsDirty(); }
+    if (paymentActive) { const payment = settingsData.finance.payments.find((item) => item.id === paymentActive.dataset.paymentActive); if (payment) payment.active = paymentActive.checked; markSettingsDirty(); }
+  });
+
+  document.addEventListener("click", (event) => {
+    const profile = event.target.closest("[data-client-profile]");
+    const edit = event.target.closest("[data-client-edit]");
+    const vehicleEdit = event.target.closest("[data-vehicle-edit]");
+    const memberEdit = event.target.closest("[data-settings-member-edit]");
+    const memberToggle = event.target.closest("[data-settings-member-toggle]");
+    if (profile) openClientProfile(profile.dataset.clientProfile);
+    if (edit) openClientEditor(edit.dataset.clientEdit);
+    if (vehicleEdit) openVehicleEditor(vehicleEdit.dataset.vehicleEdit);
+    if (memberEdit) { const [kind, id] = memberEdit.dataset.settingsMemberEdit.split(":"); openSettingsMemberEditor(kind, id); }
+    if (memberToggle) { const [kind, id] = memberToggle.dataset.settingsMemberToggle.split(":"); toggleSettingsMember(kind, id); }
+  });
+}
