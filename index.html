@@ -898,6 +898,253 @@
         </div>
       </section>
 
+      <section class="module-view clients-view" id="clientsView" hidden aria-labelledby="clientsTitle">
+        <div class="page-heading module-heading">
+          <div>
+            <p class="eyebrow"><span class="live-dot"></span> Relación con clientes</p>
+            <h1 id="clientsTitle">Clientes y vehículos</h1>
+            <p>Centraliza contactos, vehículos, historial, deudas y próximos mantenimientos.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="button button--ghost" id="clientsExportButton" type="button"><svg><use href="#icon-download"></use></svg> Exportar</button>
+            <button class="button button--primary" id="clientNewButton" type="button"><svg><use href="#icon-plus"></use></svg> Nuevo cliente</button>
+          </div>
+        </div>
+
+        <div class="module-metrics clients-metrics" id="clientsMetrics"></div>
+
+        <div class="clients-layout">
+          <div class="clients-main-column">
+            <article class="panel module-toolbar">
+              <div class="module-toolbar__top">
+                <label class="module-search" for="clientsSearch">
+                  <span class="sr-only">Buscar clientes</span>
+                  <svg><use href="#icon-search"></use></svg>
+                  <input id="clientsSearch" type="search" placeholder="Buscar nombre, DNI/RUC, teléfono, placa o vehículo…">
+                </label>
+                <div class="view-switch" aria-label="Vista del catálogo">
+                  <button class="is-active" id="clientsTableViewButton" type="button" aria-label="Vista en tabla"><svg><use href="#icon-list"></use></svg></button>
+                  <button id="clientsCardViewButton" type="button" aria-label="Vista en tarjetas"><svg><use href="#icon-grid"></use></svg></button>
+                </div>
+                <button class="button button--ghost filter-toggle" id="clientsFilterToggle" type="button" aria-expanded="false"><svg><use href="#icon-filter"></use></svg> Filtros</button>
+              </div>
+              <div class="filter-grid clients-filter-grid" id="clientsFilterGrid" hidden>
+                <label class="field-control"><span>Tipo</span><select id="clientsTypeFilter"><option value="all">Todos</option><option value="persona">Persona</option><option value="empresa">Empresa</option></select></label>
+                <label class="field-control"><span>Segmento</span><select id="clientsSegmentFilter"><option value="all">Todos</option><option value="vip">VIP</option><option value="frecuente">Frecuente</option><option value="nuevo">Nuevo</option><option value="inactivo">Inactivo</option></select></label>
+                <label class="field-control"><span>Saldo</span><select id="clientsBalanceFilter"><option value="all">Todos</option><option value="debt">Con deuda</option><option value="clear">Al día</option><option value="credit">Con crédito</option></select></label>
+                <label class="field-control"><span>Próximo servicio</span><select id="clientsServiceFilter"><option value="all">Todos</option><option value="due">Vencido</option><option value="soon">Próximos 30 días</option><option value="scheduled">Programado</option><option value="none">Sin programación</option></select></label>
+                <label class="field-control"><span>Ordenar</span><select id="clientsSort"><option value="recent">Visita reciente</option><option value="spent">Mayor facturación</option><option value="visits">Más visitas</option><option value="name">Nombre A–Z</option><option value="balance">Mayor deuda</option></select></label>
+                <div class="filter-actions clients-filter-actions"><button class="text-button" id="clientsClearFilters" type="button">Limpiar filtros</button><span id="clientsResultCount">0 clientes</span></div>
+              </div>
+            </article>
+
+            <article class="panel data-panel" id="clientsTablePanel">
+              <div class="panel__header panel__header--with-action data-panel__header">
+                <div><p class="panel__eyebrow">Base de clientes</p><h2>Contactos y vehículos registrados</h2></div>
+                <span class="pill pill--info" id="clientsTableSummary">0 registros</span>
+              </div>
+              <div class="responsive-table-wrap">
+                <table class="data-table clients-table">
+                  <thead><tr><th>Cliente</th><th>Contacto</th><th>Vehículos</th><th>Última visita</th><th>Facturación</th><th>Saldo</th><th>Segmento</th><th></th></tr></thead>
+                  <tbody id="clientsTableBody"></tbody>
+                </table>
+              </div>
+              <div class="table-empty" id="clientsEmpty" hidden><span><svg><use href="#icon-users"></use></svg></span><strong>No hay coincidencias</strong><p>Revisa la búsqueda o los filtros aplicados.</p></div>
+            </article>
+            <div class="clients-card-grid" id="clientsCardGrid" hidden></div>
+          </div>
+
+          <aside class="clients-side-column">
+            <article class="panel">
+              <div class="panel__header panel__header--with-action"><div><p class="panel__eyebrow">Seguimiento</p><h2>Recordatorios próximos</h2></div><span class="pill pill--warning" id="clientReminderCount">0</span></div>
+              <div class="client-reminder-list" id="clientReminderList"></div>
+            </article>
+            <article class="panel">
+              <div class="panel__header"><div><p class="panel__eyebrow">Valor del cliente</p><h2>Clientes destacados</h2></div></div>
+              <div class="client-ranking-list" id="clientRankingList"></div>
+            </article>
+            <article class="panel client-insight-panel">
+              <div class="client-insight-icon"><svg><use href="#icon-trending"></use></svg></div>
+              <div><p class="panel__eyebrow">Oportunidad del mes</p><h3 id="clientOpportunityTitle">Recupera clientes inactivos</h3><p id="clientOpportunityText">Envía recordatorios de mantenimiento.</p></div>
+              <button class="button button--ghost button--small" id="clientCampaignButton" type="button">Preparar campaña</button>
+            </article>
+          </aside>
+        </div>
+      </section>
+
+      <section class="module-view settings-view" id="settingsView" hidden aria-labelledby="settingsTitle">
+        <div class="page-heading module-heading settings-heading">
+          <div>
+            <p class="eyebrow"><span class="live-dot"></span> Administración del sistema</p>
+            <h1 id="settingsTitle">Configuración</h1>
+            <p>Personaliza el negocio, la operación, el equipo, los costos, las alertas y los documentos.</p>
+          </div>
+          <div class="heading-actions">
+            <span class="settings-save-state" id="settingsSaveState"><i></i> Sin cambios</span>
+            <button class="button button--ghost" id="settingsResetButton" type="button"><svg><use href="#icon-refresh"></use></svg> Restaurar</button>
+            <button class="button button--primary" id="settingsSaveButton" type="button"><svg><use href="#icon-save"></use></svg> Guardar</button>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+          <aside class="panel settings-nav" aria-label="Categorías de configuración">
+            <button class="is-active" type="button" data-settings-tab="business"><svg><use href="#icon-wrench"></use></svg><span><strong>Negocio</strong><small>Datos e identidad</small></span></button>
+            <button type="button" data-settings-tab="operations"><svg><use href="#icon-clipboard"></use></svg><span><strong>Operación</strong><small>Órdenes y tiempos</small></span></button>
+            <button type="button" data-settings-tab="team"><svg><use href="#icon-users"></use></svg><span><strong>Equipo y permisos</strong><small>Usuarios y mecánicos</small></span></button>
+            <button type="button" data-settings-tab="services"><svg><use href="#icon-tag"></use></svg><span><strong>Servicios</strong><small>Categorías y tarifas</small></span></button>
+            <button type="button" data-settings-tab="finance"><svg><use href="#icon-wallet"></use></svg><span><strong>Finanzas</strong><small>Impuestos y márgenes</small></span></button>
+            <button type="button" data-settings-tab="notifications"><svg><use href="#icon-bell"></use></svg><span><strong>Notificaciones</strong><small>Alertas y mensajes</small></span></button>
+            <button type="button" data-settings-tab="documents"><svg><use href="#icon-print"></use></svg><span><strong>Documentos</strong><small>Orden y cotización</small></span></button>
+            <button type="button" data-settings-tab="security"><svg><use href="#icon-shield"></use></svg><span><strong>Seguridad</strong><small>Respaldo y auditoría</small></span></button>
+          </aside>
+
+          <form class="settings-content" id="settingsForm">
+            <section class="settings-panel is-active" data-settings-panel="business">
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Identidad del taller</p><h2>Información comercial</h2><p>Se mostrará en órdenes, presupuestos y reportes.</p></div><div class="workshop-logo-preview" id="workshopLogoPreview"><svg><use href="#icon-wrench"></use></svg><span>TF</span></div></div>
+                <div class="form-grid settings-form-grid">
+                  <label class="field-control"><span>Nombre comercial *</span><input id="settingWorkshopName" type="text" required></label>
+                  <label class="field-control"><span>Razón social</span><input id="settingLegalName" type="text"></label>
+                  <label class="field-control"><span>RUC</span><input id="settingRuc" type="text" maxlength="11"></label>
+                  <label class="field-control"><span>Teléfono</span><input id="settingPhone" type="tel"></label>
+                  <label class="field-control"><span>WhatsApp</span><input id="settingWhatsapp" type="tel"></label>
+                  <label class="field-control"><span>Correo</span><input id="settingEmail" type="email"></label>
+                  <label class="field-control field-span-2"><span>Dirección</span><input id="settingAddress" type="text"></label>
+                  <label class="field-control"><span>Ciudad</span><input id="settingDistrict" type="text"></label>
+                  <label class="field-control"><span>Zona horaria</span><select id="settingTimezone"><option value="America/Lima">America/Lima (UTC−5)</option><option value="America/Bogota">America/Bogota</option><option value="America/Santiago">America/Santiago</option></select></label>
+                </div>
+              </article>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Apariencia</p><h2>Tema y marca visual</h2></div></div>
+                <div class="settings-choice-grid">
+                  <label class="settings-choice"><input type="radio" name="settingTheme" value="dark"><span class="theme-swatch theme-swatch--dark"></span><strong>Oscuro</strong><small>Operación diaria</small></label>
+                  <label class="settings-choice"><input type="radio" name="settingTheme" value="light"><span class="theme-swatch theme-swatch--light"></span><strong>Claro</strong><small>Mayor luminosidad</small></label>
+                  <label class="settings-choice"><input type="radio" name="settingTheme" value="system"><span class="theme-swatch theme-swatch--system"></span><strong>Sistema</strong><small>Sigue el dispositivo</small></label>
+                </div>
+                <div class="form-grid settings-form-grid settings-form-grid--compact">
+                  <label class="field-control"><span>Color principal</span><div class="color-input-wrap"><input id="settingAccent" type="color"><input id="settingAccentText" type="text" maxlength="7"></div></label>
+                  <label class="field-control"><span>Densidad</span><select id="settingDensity"><option value="comfortable">Cómoda</option><option value="compact">Compacta</option></select></label>
+                </div>
+              </article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="operations" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Numeración y tiempos</p><h2>Reglas de las órdenes</h2></div><span class="settings-preview-code" id="orderNumberPreview">OT-1049</span></div>
+                <div class="form-grid settings-form-grid">
+                  <label class="field-control"><span>Prefijo</span><input id="settingOrderPrefix" type="text" maxlength="6"></label>
+                  <label class="field-control"><span>Siguiente correlativo</span><input id="settingNextOrder" type="number" min="1"></label>
+                  <label class="field-control"><span>Entrega predeterminada</span><select id="settingDeliveryHours"><option value="8">8 horas</option><option value="24">24 horas</option><option value="48">48 horas</option><option value="72">72 horas</option></select></label>
+                  <label class="field-control"><span>Umbral de presupuesto</span><div class="input-suffix"><input id="settingBudgetThreshold" type="number" min="50" max="100"><span>%</span></div></label>
+                </div>
+                <div class="settings-switch-list">
+                  <label class="setting-switch"><span><strong>Fotografías obligatorias</strong><small>Solicitar evidencias al recibir el vehículo.</small></span><input id="settingRequirePhotos" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Aprobación del cliente</strong><small>Bloquear trabajos no autorizados.</small></span><input id="settingRequireApproval" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Evitar stock negativo</strong><small>Impedir consumir piezas sin existencia.</small></span><input id="settingPreventNegativeStock" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Cierre automático</strong><small>Enviar órdenes entregadas al historial.</small></span><input id="settingAutoClose" type="checkbox"><i></i></label>
+                </div>
+              </article>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Alertas de productividad</p><h2>Control de tiempos</h2></div></div>
+                <div class="form-grid settings-form-grid">
+                  <label class="field-control"><span>Orden sin iniciar</span><select id="settingStartAlert"><option value="30">30 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option></select></label>
+                  <label class="field-control"><span>Trabajo externo</span><select id="settingExternalAlert"><option value="4">4 horas</option><option value="8">8 horas</option><option value="24">24 horas</option></select></label>
+                  <label class="field-control"><span>Garantía próxima</span><div class="input-suffix"><input id="settingWarrantyAlert" type="number" min="1"><span>días</span></div></label>
+                  <label class="field-control"><span>Niveles de combustible</span><select id="settingFuelSteps"><option value="4">Cuartos</option><option value="8">Octavos</option><option value="10">Porcentaje</option></select></label>
+                </div>
+              </article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="team" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header settings-card__header--action"><div><p class="panel__eyebrow">Acceso al sistema</p><h2>Usuarios y roles</h2><p>Controla quién puede ver costos, órdenes e inventario.</p></div><button class="button button--primary button--small" id="settingsAddUser" type="button"><svg><use href="#icon-plus"></use></svg> Agregar usuario</button></div>
+                <div class="responsive-table-wrap"><table class="data-table settings-users-table"><thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th>Permisos</th><th></th></tr></thead><tbody id="settingsUsersBody"></tbody></table></div>
+              </article>
+              <article class="panel settings-card">
+                <div class="settings-card__header settings-card__header--action"><div><p class="panel__eyebrow">Capacidad operativa</p><h2>Mecánicos y especialidades</h2></div><button class="button button--ghost button--small" id="settingsAddMechanic" type="button"><svg><use href="#icon-plus"></use></svg> Nuevo mecánico</button></div>
+                <div class="settings-mechanics-grid" id="settingsMechanicsGrid"></div>
+              </article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="services" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Catálogo comercial</p><h2>Categorías de servicios</h2><p>Activa categorías y define el margen sugerido.</p></div><span class="pill pill--info" id="settingsServicesCount">0 servicios</span></div>
+                <div class="settings-category-grid" id="settingsServiceCategories"></div>
+              </article>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Tarifas predeterminadas</p><h2>Mano de obra y garantía</h2></div></div>
+                <div class="form-grid settings-form-grid">
+                  <label class="field-control"><span>Hora de mano de obra</span><div class="input-prefix"><span>S/</span><input id="settingLaborHour" type="number" min="0"></div></label>
+                  <label class="field-control"><span>Diagnóstico mínimo</span><div class="input-prefix"><span>S/</span><input id="settingDiagnosticMinimum" type="number" min="0"></div></label>
+                  <label class="field-control"><span>Duración del diagnóstico</span><div class="input-suffix"><input id="settingDiagnosticMinutes" type="number" min="10"><span>min</span></div></label>
+                  <label class="field-control"><span>Garantía predeterminada</span><div class="input-suffix"><input id="settingDefaultWarranty" type="number" min="0"><span>días</span></div></label>
+                </div>
+              </article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="finance" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Facturación y precios</p><h2>Impuestos y rentabilidad</h2></div></div>
+                <div class="settings-switch-list settings-switch-list--single"><label class="setting-switch"><span><strong>Aplicar IGV</strong><small>Calcula impuesto en cotizaciones y documentos.</small></span><input id="settingTaxEnabled" type="checkbox"><i></i></label></div>
+                <div class="form-grid settings-form-grid">
+                  <label class="field-control"><span>Moneda</span><select id="settingCurrency"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select></label>
+                  <label class="field-control"><span>Tasa de impuesto</span><div class="input-suffix"><input id="settingTaxRate" type="number" min="0"><span>%</span></div></label>
+                  <label class="field-control"><span>Margen en repuestos</span><div class="input-suffix"><input id="settingPartsMargin" type="number" min="0"><span>%</span></div></label>
+                  <label class="field-control"><span>Margen en externos</span><div class="input-suffix"><input id="settingExternalMargin" type="number" min="0"><span>%</span></div></label>
+                  <label class="field-control"><span>Crédito predeterminado</span><div class="input-prefix"><span>S/</span><input id="settingDefaultCredit" type="number" min="0"></div></label>
+                  <label class="field-control"><span>Stock bajo global</span><div class="input-suffix"><input id="settingLowStock" type="number" min="0"><span>unid.</span></div></label>
+                </div>
+              </article>
+              <article class="panel settings-card"><div class="settings-card__header"><div><p class="panel__eyebrow">Cobranza</p><h2>Métodos de pago</h2></div></div><div class="payment-method-grid" id="settingsPaymentMethods"></div></article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="notifications" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Canales y eventos</p><h2>Notificaciones automáticas</h2></div></div>
+                <div class="settings-switch-list">
+                  <label class="setting-switch"><span><strong>WhatsApp</strong><small>Mensajes directos al cliente.</small></span><input id="settingWhatsappEnabled" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Correo</strong><small>Cotizaciones y comprobantes.</small></span><input id="settingEmailEnabled" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Orden registrada</strong><small>Confirma el ingreso.</small></span><input id="settingNotifyCreated" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Aprobación</strong><small>Solicita autorización.</small></span><input id="settingNotifyApproval" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Cambio de estado</strong><small>Informa el avance.</small></span><input id="settingNotifyStatus" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Vehículo listo</strong><small>Avisa la entrega.</small></span><input id="settingNotifyReady" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Stock bajo</strong><small>Alerta al almacén.</small></span><input id="settingNotifyStock" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Orden demorada</strong><small>Escala retrasos.</small></span><input id="settingNotifyOverdue" type="checkbox"><i></i></label>
+                </div>
+              </article>
+              <article class="panel settings-card"><div class="settings-card__header"><div><p class="panel__eyebrow">Plantillas</p><h2>Mensajes para clientes</h2><p>Variables: {cliente}, {placa}, {orden}, {total}, {fecha}.</p></div></div><div class="settings-template-list"><label class="field-control"><span>Ingreso</span><textarea id="settingTemplateCreated" rows="3"></textarea></label><label class="field-control"><span>Aprobación</span><textarea id="settingTemplateApproval" rows="3"></textarea></label><label class="field-control"><span>Vehículo listo</span><textarea id="settingTemplateReady" rows="3"></textarea></label></div></article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="documents" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header settings-card__header--action"><div><p class="panel__eyebrow">Impresión y PDF</p><h2>Contenido de documentos</h2></div><button class="button button--ghost button--small" id="settingsPreviewDocument" type="button"><svg><use href="#icon-eye"></use></svg> Vista previa</button></div>
+                <div class="settings-switch-list">
+                  <label class="setting-switch"><span><strong>Mostrar logotipo</strong><small>Marca en la cabecera.</small></span><input id="settingDocumentLogo" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Mostrar diagnóstico</strong><small>Detalle técnico.</small></span><input id="settingDocumentDiagnosis" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Costos internos</strong><small>Solo administración.</small></span><input id="settingDocumentInternalCosts" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Firma del cliente</strong><small>Espacio de conformidad.</small></span><input id="settingDocumentSignature" type="checkbox"><i></i></label>
+                </div>
+                <div class="settings-template-list"><label class="field-control"><span>Encabezado</span><input id="settingDocumentHeader" type="text"></label><label class="field-control"><span>Pie</span><textarea id="settingDocumentFooter" rows="2"></textarea></label><label class="field-control"><span>Términos y condiciones</span><textarea id="settingDocumentTerms" rows="5"></textarea></label></div>
+              </article>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="security" hidden>
+              <article class="panel settings-card">
+                <div class="settings-card__header"><div><p class="panel__eyebrow">Protección y continuidad</p><h2>Seguridad del sistema</h2></div><span class="security-score"><svg><use href="#icon-shield"></use></svg><strong id="securityScoreValue">86%</strong><small>Nivel</small></span></div>
+                <div class="settings-switch-list">
+                  <label class="setting-switch"><span><strong>Guardado automático</strong><small>Conserva formularios.</small></span><input id="settingAutosave" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Auditoría</strong><small>Registra usuario y acción.</small></span><input id="settingAuditLog" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Copias automáticas</strong><small>Respaldo periódico.</small></span><input id="settingAutomaticBackup" type="checkbox"><i></i></label>
+                  <label class="setting-switch"><span><strong>Confirmar eliminación</strong><small>Evita borrados accidentales.</small></span><input id="settingDeleteConfirmation" type="checkbox"><i></i></label>
+                </div>
+                <div class="form-grid settings-form-grid settings-form-grid--compact"><label class="field-control"><span>Sesión inactiva</span><select id="settingSessionTimeout"><option value="15">15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option></select></label><label class="field-control"><span>Frecuencia</span><select id="settingBackupFrequency"><option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option></select></label></div>
+              </article>
+              <article class="panel settings-card backup-card"><div><p class="panel__eyebrow">Datos portables</p><h2>Respaldo y restauración</h2><p>Exporta todos los módulos en JSON.</p><small id="settingsLastBackup">Último respaldo: nunca</small></div><div class="backup-actions"><button class="button button--primary" id="settingsExportBackup" type="button"><svg><use href="#icon-download"></use></svg> Descargar</button><label class="button button--ghost" for="settingsImportBackup"><svg><use href="#icon-refresh"></use></svg> Restaurar<input id="settingsImportBackup" type="file" accept="application/json" hidden></label></div></article>
+            </section>
+          </form>
+        </div>
+      </section>
+
       <section class="placeholder-view" id="placeholderView" hidden aria-live="polite">
         <div class="placeholder-card">
           <span class="placeholder-card__icon"><svg><use href="#icon-wrench"></use></svg></span>
@@ -1129,6 +1376,107 @@
       <footer class="modal-footer"><button class="button button--primary" type="button" data-close-modal="movementsModal">Cerrar</button></footer>
     </section>
   </div>
+
+  <div class="modal-backdrop" id="clientEditorModal" hidden>
+    <section class="modal-shell modal-shell--wide" role="dialog" aria-modal="true" aria-labelledby="clientEditorTitle">
+      <header class="modal-header">
+        <div><p class="panel__eyebrow">Base de clientes</p><h2 id="clientEditorTitle">Nuevo cliente</h2></div>
+        <button class="icon-button" type="button" data-close-modal="clientEditorModal" aria-label="Cerrar"><svg><use href="#icon-x"></use></svg></button>
+      </header>
+      <form class="modal-body form-grid" id="clientEditorForm">
+        <input id="clientEditorId" type="hidden">
+        <label class="field-control"><span>Tipo de cliente *</span><select id="clientEditorType"><option value="persona">Persona</option><option value="empresa">Empresa</option></select></label>
+        <label class="field-control"><span>Segmento</span><select id="clientEditorSegment"><option value="nuevo">Nuevo</option><option value="frecuente">Frecuente</option><option value="vip">VIP</option><option value="inactivo">Inactivo</option></select></label>
+        <label class="field-control field-span-2"><span>Nombre o razón social *</span><input id="clientEditorName" type="text" required placeholder="Nombre completo o empresa"></label>
+        <label class="field-control"><span>DNI / RUC *</span><input id="clientEditorDocument" type="text" required placeholder="Documento"></label>
+        <label class="field-control"><span>Teléfono / WhatsApp *</span><input id="clientEditorPhone" type="tel" required placeholder="999 999 999"></label>
+        <label class="field-control"><span>Correo</span><input id="clientEditorEmail" type="email" placeholder="cliente@correo.com"></label>
+        <label class="field-control"><span>Fecha de nacimiento</span><span class="date-control"><input id="clientEditorBirthday" type="date"></span></label>
+        <label class="field-control field-span-2"><span>Dirección</span><input id="clientEditorAddress" type="text" placeholder="Dirección completa"></label>
+        <label class="field-control"><span>Distrito</span><input id="clientEditorDistrict" type="text" placeholder="Chiclayo"></label>
+        <label class="field-control"><span>Origen del cliente</span><select id="clientEditorSource"><option>Recomendación</option><option>Google</option><option>Facebook</option><option>Instagram</option><option>Tránsito</option><option>Empresa / convenio</option><option>Otro</option></select></label>
+        <label class="field-control"><span>Límite de crédito (S/)</span><input id="clientEditorCreditLimit" type="number" min="0" step="0.01" value="0"></label>
+        <label class="field-control"><span>Estado</span><select id="clientEditorStatus"><option value="active">Activo</option><option value="inactive">Inactivo</option><option value="blocked">Bloqueado</option></select></label>
+        <div class="field-span-2 client-consent-grid">
+          <label class="switch-row"><input id="clientEditorMarketing" type="checkbox"><span><strong>Acepta comunicaciones</strong><small>Recordatorios, campañas y novedades.</small></span></label>
+          <label class="switch-row"><input id="clientEditorCreditEnabled" type="checkbox"><span><strong>Venta a crédito habilitada</strong><small>Permite registrar saldos pendientes.</small></span></label>
+        </div>
+        <label class="field-control field-span-2"><span>Etiquetas</span><input id="clientEditorTags" type="text" placeholder="Ej. flota, taxi, empresa, familiar (separadas por comas)"></label>
+        <label class="field-control field-span-2"><span>Notas internas</span><textarea id="clientEditorNotes" rows="3" placeholder="Preferencias, acuerdos, observaciones o restricciones"></textarea></label>
+      </form>
+      <footer class="modal-footer">
+        <button class="button button--ghost" type="button" data-close-modal="clientEditorModal">Cancelar</button>
+        <button class="button button--primary" id="clientSaveButton" type="button"><svg><use href="#icon-save"></use></svg> Guardar cliente</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="clientProfileModal" hidden>
+    <section class="modal-shell modal-shell--wide client-profile-modal" role="dialog" aria-modal="true" aria-labelledby="clientProfileTitle">
+      <header class="modal-header client-profile-header">
+        <div class="client-profile-identity"><span class="client-avatar client-avatar--large" id="clientProfileAvatar">CL</span><div><p class="panel__eyebrow" id="clientProfileDocument">Cliente</p><h2 id="clientProfileTitle">Ficha del cliente</h2><p id="clientProfileContact">—</p></div></div>
+        <div class="client-profile-actions"><button class="button button--ghost button--small" id="clientProfileEditButton" type="button"><svg><use href="#icon-edit"></use></svg> Editar</button><button class="icon-button" type="button" data-close-modal="clientProfileModal" aria-label="Cerrar"><svg><use href="#icon-x"></use></svg></button></div>
+      </header>
+      <nav class="client-profile-tabs" aria-label="Detalle del cliente">
+        <button class="is-active" type="button" data-client-tab="overview">Resumen</button>
+        <button type="button" data-client-tab="vehicles">Vehículos <span id="clientProfileVehicleCount">0</span></button>
+        <button type="button" data-client-tab="history">Historial</button>
+        <button type="button" data-client-tab="finance">Finanzas</button>
+        <button type="button" data-client-tab="notes">Notas</button>
+      </nav>
+      <div class="modal-body client-profile-body" id="clientProfileContent"></div>
+      <footer class="modal-footer client-profile-footer">
+        <button class="button button--ghost" id="clientProfileWhatsApp" type="button"><svg><use href="#icon-phone"></use></svg> WhatsApp</button>
+        <button class="button button--ghost" id="clientAddVehicleButton" type="button"><svg><use href="#icon-car"></use></svg> Agregar vehículo</button>
+        <button class="button button--primary" id="clientCreateOrderButton" type="button"><svg><use href="#icon-plus"></use></svg> Nueva orden</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="vehicleEditorModal" hidden>
+    <section class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="vehicleEditorTitle">
+      <header class="modal-header"><div><p class="panel__eyebrow">Parque vehicular</p><h2 id="vehicleEditorTitle">Agregar vehículo</h2></div><button class="icon-button" type="button" data-close-modal="vehicleEditorModal" aria-label="Cerrar"><svg><use href="#icon-x"></use></svg></button></header>
+      <form class="modal-body form-grid" id="vehicleEditorForm">
+        <input id="vehicleEditorId" type="hidden">
+        <label class="field-control"><span>Placa *</span><input id="vehicleEditorPlate" type="text" required placeholder="ABC-123"></label>
+        <label class="field-control"><span>Marca *</span><input id="vehicleEditorBrand" type="text" required placeholder="Toyota"></label>
+        <label class="field-control"><span>Modelo *</span><input id="vehicleEditorModel" type="text" required placeholder="Corolla"></label>
+        <label class="field-control"><span>Año</span><input id="vehicleEditorYear" type="number" min="1950" max="2030" placeholder="2022"></label>
+        <label class="field-control"><span>Color</span><input id="vehicleEditorColor" type="text" placeholder="Gris"></label>
+        <label class="field-control"><span>Combustible</span><select id="vehicleEditorFuel"><option>Gasolina</option><option>Diésel</option><option>GLP</option><option>GNV</option><option>Híbrido</option><option>Eléctrico</option></select></label>
+        <label class="field-control"><span>Kilometraje</span><input id="vehicleEditorMileage" type="number" min="0" step="1" placeholder="0"></label>
+        <label class="field-control"><span>VIN / Serie</span><input id="vehicleEditorVin" type="text" placeholder="Número de chasis"></label>
+        <label class="field-control field-span-2"><span>Próximo mantenimiento</span><span class="date-control"><input id="vehicleEditorNextService" type="date"></span></label>
+        <label class="field-control field-span-2"><span>Observaciones</span><textarea id="vehicleEditorNotes" rows="3" placeholder="Accesorios, modificaciones o consideraciones"></textarea></label>
+      </form>
+      <footer class="modal-footer"><button class="button button--ghost" type="button" data-close-modal="vehicleEditorModal">Cancelar</button><button class="button button--primary" id="vehicleSaveButton" type="button"><svg><use href="#icon-save"></use></svg> Guardar vehículo</button></footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="settingsMemberModal" hidden>
+    <section class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="settingsMemberTitle">
+      <header class="modal-header"><div><p class="panel__eyebrow">Equipo del taller</p><h2 id="settingsMemberTitle">Nuevo usuario</h2></div><button class="icon-button" type="button" data-close-modal="settingsMemberModal" aria-label="Cerrar"><svg><use href="#icon-x"></use></svg></button></header>
+      <form class="modal-body form-grid" id="settingsMemberForm">
+        <input id="settingsMemberId" type="hidden"><input id="settingsMemberKind" type="hidden">
+        <label class="field-control field-span-2"><span>Nombre completo *</span><input id="settingsMemberName" type="text" required></label>
+        <label class="field-control"><span>Correo</span><input id="settingsMemberEmail" type="email"></label>
+        <label class="field-control"><span>Teléfono</span><input id="settingsMemberPhone" type="tel"></label>
+        <label class="field-control"><span>Rol / especialidad *</span><input id="settingsMemberRole" type="text" required placeholder="Administrador o Motor y diagnóstico"></label>
+        <label class="field-control"><span>Estado</span><select id="settingsMemberStatus"><option value="active">Activo</option><option value="inactive">Inactivo</option></select></label>
+        <label class="field-control field-span-2"><span>Permisos</span><select id="settingsMemberPermission"><option value="full">Acceso completo</option><option value="operations">Operación y órdenes</option><option value="inventory">Inventario</option><option value="read">Solo lectura</option></select></label>
+      </form>
+      <footer class="modal-footer"><button class="button button--ghost" type="button" data-close-modal="settingsMemberModal">Cancelar</button><button class="button button--primary" id="settingsMemberSave" type="button"><svg><use href="#icon-save"></use></svg> Guardar</button></footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="settingsDocumentModal" hidden>
+    <section class="modal-shell modal-shell--wide" role="dialog" aria-modal="true" aria-labelledby="settingsDocumentTitle">
+      <header class="modal-header"><div><p class="panel__eyebrow">Vista previa</p><h2 id="settingsDocumentTitle">Formato de orden de trabajo</h2></div><button class="icon-button" type="button" data-close-modal="settingsDocumentModal" aria-label="Cerrar"><svg><use href="#icon-x"></use></svg></button></header>
+      <div class="modal-body"><div class="document-preview-sheet" id="settingsDocumentPreview"></div></div>
+      <footer class="modal-footer"><button class="button button--ghost" type="button" data-close-modal="settingsDocumentModal">Cerrar</button><button class="button button--primary" id="settingsDocumentPrint" type="button"><svg><use href="#icon-print"></use></svg> Imprimir prueba</button></footer>
+    </section>
+  </div>
+
 
   <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
